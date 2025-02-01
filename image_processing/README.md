@@ -10,6 +10,7 @@ This repository contains materials for the Image Processing course. This course 
 3.  **Image Resampling and Registration:** Techniques for image resampling and registration, including feature-based and intensity-based registration methods.
 4.  **Deep Generative Models and Self-Supervised Learning in Images I:** Introduction to deep generative models (e.g., GANs, VAEs) and self-supervised learning techniques for image generation and analysis.
 5.  **Deep Generative Models and Self-Supervised Learning in Images II:** Further exploration of advanced deep generative models and self-supervised learning methods, including recent research and applications.
+6.  **Diffusion Imaging:** Principles of diffusion imaging, including the diffusion tensor model, fiber tracking, and applications in neuroscience and clinical settings.
 
 ## Recommended Textbooks and Resources
 
