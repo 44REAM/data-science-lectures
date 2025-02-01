@@ -1,4 +1,3 @@
-Markdown
 
 # Image Processing Course
 
