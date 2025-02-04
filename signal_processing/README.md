@@ -4,7 +4,7 @@ This repository contains materials for the Signal Processing course.
 Course Topics
 The course covers the following key areas:
 
-Introduction to signal processing: 
+1. Introduction to signal processing: 
 - Common notation in signal processing
 - Quantization, Sampling
 - Convolution
