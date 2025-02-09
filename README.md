@@ -11,3 +11,4 @@ The materials in this repository span the following areas:
 *   **Programming for medical physicists** 
 *   **Image Processing:**
 *   **Machine Learning:**
+*   **Signal Processing**
