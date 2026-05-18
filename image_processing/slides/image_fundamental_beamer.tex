@@ -3,7 +3,7 @@
 \usetheme{Madrid}
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{footline}[frame number]
-
+\usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{array}
@@ -62,6 +62,13 @@
 
 
 
+\end{frame}
+
+\section{Sampling and Quantization}
+\begin{frame}
+\centering
+\vspace{0.25\textheight}
+{\Huge Sampling, Quantization, and Resampling}
 \end{frame}
 
 \begin{frame}
@@ -135,12 +142,20 @@ https://phiresky.github.io/convolution-demo/
 \end{columns}
 \end{frame}
 
+\begin{frame}
+\begin{center}
+  \includegraphics[width=1\linewidth]{../figures/sampling_viz.png}
+
+\end{center}
+
+\end{frame}
+
 \begin{frame}{Nyquist, Aliasing, and the Cost of Undersampling}
 \begin{columns}[T,onlytextwidth]
 \column{0.55\textwidth}
 \begin{itemize}
 \item Smaller pixel spacing permits higher recoverable spatial frequency.
-\item A classical bound is $\Delta_x \leq 1/(2B_x)$ and $\Delta_y \leq 1/(2B_y)$ for scene bandwidths $B_x, B_y$.
+\item Equivalently, in frequency terms: $f_{s,x} = 1/\Delta_x \geq 2B_x$ and $f_{s,y} = 1/\Delta_y \geq 2B_y$ for scene frequency $B_x, B_y$.
 \item Downsampling without prefiltering folds high frequencies into lower frequencies.
 \item In scientific imaging, aliasing corrupts measurement, not just aesthetics.
 \end{itemize}
@@ -172,34 +187,6 @@ Sample at least twice as fast as the highest spatial frequency you want to prese
 \end{columns}
 \end{frame}
 
-\begin{frame}{Resolution Is Not the Same as Pixel Count}
-\begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
-\begin{itemize}
-\item Pixel count is a grid property; resolution is an effective ability to distinguish nearby structure.
-\item Optical blur, detector blur, motion blur, and reconstruction kernels all affect effective resolution.
-\item Partial-volume effects arise when one voxel contains multiple tissue types or materials.
-\item A finely sampled but strongly blurred image can still have poor effective resolution.
-\end{itemize}
-
-\begin{block}{Research implication}
-Do not infer resolving power from image size alone. The point-spread function matters.
-\end{block}
-
-\column{0.42\textwidth}
-\small
-\begin{tabularx}{\linewidth}{>{\bfseries}p{0.34\linewidth} X}
-\toprule
-Quantity & What it controls \\
-\midrule
-Pixel spacing & sampling grid \\
-Field of view & spatial coverage \\
-Point-spread function & effective blur \\
-Slice thickness & through-plane averaging \\
-\bottomrule
-\end{tabularx}
-\end{columns}
-\end{frame}
 
 \begin{frame}{Quantization Sets Intensity Resolution}
 
@@ -213,6 +200,14 @@ Slice thickness & through-plane averaging \\
 
 \end{frame}
 
+
+\begin{frame}
+\begin{center}
+  \includegraphics[width=1\linewidth]{../figures/quantile_viz.png}
+
+\end{center}
+
+\end{frame}
 
 \begin{frame}{Information Loss and Invertibility}
 \small
@@ -239,14 +234,33 @@ Artifact & Interpretation \\
 \midrule
 Aliasing & Sampling is too coarse for the spatial detail in the scene. Fine texture can appear as false low-frequency patterns. \\
 Banding & Quantization is too coarse, so smooth intensity transitions become step-like. \\
-Interpolation blur & Repeated resampling smooths edges and attenuates high-frequency information. \\
-Broken labels & Using linear or cubic interpolation on masks creates invalid class values between labels. \\
 \bottomrule
 \end{tabularx}
 
 \end{frame}
 
-\begin{frame}{Coordinate Systems Matter}
+\begin{frame}
+\begin{center}
+  \includegraphics[width=1\linewidth]{../figures/image_banding.png}
+
+\end{center}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+  \includegraphics[width=1\linewidth]{../figures/image_aliasing.png}
+
+\end{center}
+\end{frame}
+
+\section{Geometric operations}
+\begin{frame}
+\centering
+\vspace{0.25\textheight}
+{\Huge Geometric operations}
+\end{frame}
+
+\begin{frame}{Coordinate Systems}
 \begin{columns}[T,onlytextwidth]
 \column{0.50\textwidth}
 \begin{itemize}
@@ -267,6 +281,54 @@ Broken labels & Using linear or cubic interpolation on masks creates invalid cla
 \end{columns}
 \end{frame}
 
+\begin{frame}{Geometric Transformations}
+Geometric operations consist of two steps:
+\begin{itemize}
+  \item Spatial transformation of coordinates
+  \item Intensity interpolation
+\end{itemize}
+
+\vspace{0.5cm}
+
+\begin{itemize}
+  \item \href{https://opencv24-python-tutorials.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_geometric_transformations/py_geometric_transformations.html}{Transformation in OpenCV}
+  \item \href{https://docs.opencv.org/3.4/da/d54/group__imgproc__transform.html\#ga5bb5a1fea74ea38e1a5445ca803ff121}{Interpolation in OpenCV}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{General Geometric Transformation}
+\small
+\[
+T:\mathbb{R}^n \to \mathbb{R}^n,\qquad \mathbf{x}' = T(\mathbf{x}).
+\]
+
+Example forms:
+\[
+\text{Affine: } T(\mathbf{x}) = A\mathbf{x}+\mathbf{t},\quad A\in\mathbb{R}^{n\times n},\ \mathbf{t}\in\mathbb{R}^n.
+\]
+\[
+\text{Projective (homogeneous): } \tilde{\mathbf{x}}' = H\tilde{\mathbf{x}},\quad H\in\mathbb{R}^{(n+1)\times(n+1)}.
+\]
+
+If $T$ is differentiable, its Jacobian $J_T(\mathbf{x})=\partial T/\partial\mathbf{x}$ gives the local linearization; $\det J_T$ scales volumes.
+
+Composition and inverse:
+\[
+(T_2\circ T_1)(\mathbf{x}) = T_2(T_1(\mathbf{x})),\qquad T^{-1}\ \text{exists if }T\ \text{is bijective}.
+\]
+
+\end{frame}
+
+
+\begin{frame}
+\begin{center}
+  \includegraphics[width=0.6\linewidth]{../figures/trans.png}
+
+\end{center}
+
+\end{frame}
+
+
 \begin{frame}{Geometric Transforms: What Changes and What Stays}
 \small
 \begin{tabularx}{\textwidth}{>{\bfseries}p{0.15\textwidth} >{\raggedright\arraybackslash}p{0.24\textwidth} >{\raggedright\arraybackslash}p{0.22\textwidth} X}
@@ -280,11 +342,61 @@ Projective & $\tilde{\mathbf{x}}' = H\tilde{\mathbf{x}}$ & straight lines & pers
 \bottomrule
 \end{tabularx}
 
-\vspace{0.6em}
-\begin{block}{Key idea}
-The transform changes coordinates first. Intensity values are assigned only after we decide where the new sample locations lie.
-\end{block}
+
 \end{frame}
+
+\begin{frame}{Affine Transformation (definition) -- Example}
+\small
+\[
+\mathbf{x}' = A\mathbf{x} + \mathbf{t}, \qquad A\in\mathbb{R}^{2\times2},\ \mathbf{t}\in\mathbb{R}^2
+\]
+\vspace{0.4em}
+\begin{itemize}
+  \item An affine map is a composition of a linear map $A$ and a translation $\mathbf{t}$.
+  \item Translation does not preserve the zero vector, so affine maps are not purely linear.
+\end{itemize}
+\vspace{0.6em}
+\textbf{Numeric example: } $A=\begin{bmatrix}2&0\\0&1\end{bmatrix}$, $\mathbf{t}=\begin{bmatrix}1\\-1\end{bmatrix}$, $\mathbf{x}=\begin{bmatrix}1\\2\end{bmatrix}$. Then
+\[
+\mathbf{x}'=A\mathbf{x}+\mathbf{t}=\begin{bmatrix}3\\1\end{bmatrix}.
+\]
+\end{frame}
+
+\begin{frame}{Rigid Transformation (2D) -- Example}
+\small
+\[
+\mathbf{x}' = R(\theta)\,\mathbf{x} + \mathbf{t}, \qquad
+R(\theta) = \begin{bmatrix}\cos\theta & -\sin\theta \\\sin\theta & \cos\theta\end{bmatrix}
+\]
+\vspace{0.4em}
+\begin{itemize}
+  \item $R(\theta)^T R(\theta) = I$ and $\det R(\theta)=1$ (proper rotation).
+  \item Preserves distances and angles; used for pure rotation+translation.
+\end{itemize}
+\vspace{0.4em}
+\textbf{Numeric example: } $\theta=90^\circ$, $R=\begin{bmatrix}0&-1\\1&0\end{bmatrix}$, $\mathbf{t}=\begin{bmatrix}1\\2\end{bmatrix}$, $\mathbf{x}=\begin{bmatrix}1\\0\end{bmatrix}$. Then
+\[
+\mathbf{x}'=R\mathbf{x}+\mathbf{t}=\begin{bmatrix}1\\3\end{bmatrix}.
+\]
+\end{frame}
+
+\begin{frame}{Similarity Transformation (2D) -- Example}
+\small
+\[
+\mathbf{x}' = s\,R(\theta)\,\mathbf{x} + \mathbf{t},\qquad s>0
+\]
+\vspace{0.4em}
+\begin{itemize}
+  \item Combines rotation, uniform scaling, and translation.
+  \item Preserves angles and shapes up to an overall scale (not absolute distances).
+\end{itemize}
+\vspace{0.4em}
+\textbf{Numeric example: } $s=2$, $\theta=0$, $R=I$, $\mathbf{t}=\begin{bmatrix}-1\\0\end{bmatrix}$, $\mathbf{x}=\begin{bmatrix}1\\1\end{bmatrix}$. Then
+\[
+\mathbf{x}'=2I\mathbf{x}+\mathbf{t}=\begin{bmatrix}1\\2\end{bmatrix}.
+\]
+\end{frame}
+
 
 \begin{frame}{Homogeneous Coordinates Make Composition Clean}
 \begin{columns}[T,onlytextwidth]
@@ -313,59 +425,393 @@ Homogeneous coordinates turn geometric bookkeeping into linear algebra.
 \end{columns}
 \end{frame}
 
-\begin{frame}{Geometric Intuition: A Camera View Is Already a Transform}
-\begin{columns}[T,onlytextwidth]
-\column{0.48\textwidth}
-\includegraphics[height=0.36\textheight]{book.jpg}
-
-\column{0.48\textwidth}
-\includegraphics[height=0.36\textheight]{moving_book.jpg}
-\end{columns}
-
-\vspace{0.2em}
+\begin{frame}{Examples in Homogeneous Coordinates}
 \small
-\begin{block}{Interpretation}
-Even before registration is discussed, perspective changes, viewpoint shifts, and cropping already imply a geometric transform between two images of the same object.
-\end{block}
+\begin{columns}[T,onlytextwidth]
+\column{0.4\textwidth}
+\textbf{Rigid}
+\[
+\tilde{\mathbf{x}}' = \begin{bmatrix}R & \mathbf{t} \\\mathbf{0}^T & 1\end{bmatrix}\tilde{\mathbf{x}},\qquad
+R=\begin{bmatrix}\cos\theta & -\sin\theta\\\sin\theta & \cos\theta\end{bmatrix}
+\]
+Numeric example:
+\[
+\begin{bmatrix}0 & -1 & 1 \\\ 1 & 0 & 2 \\\ 0 & 0 & 1\end{bmatrix}
+\begin{bmatrix}1\\0\\1\end{bmatrix}=\begin{bmatrix}1\\3\\1\end{bmatrix}
+\]
+
+\column{0.3\textwidth}
+\textbf{Similarity}
+\[
+\tilde{\mathbf{x}}' = \begin{bmatrix}sR & \mathbf{t}\\\mathbf{0}^T & 1\end{bmatrix}\tilde{\mathbf{x}},\qquad s>0
+\]
+Numeric example:
+\[
+\begin{bmatrix}2 & 0 & -1 \\\ 0 & 2 & 0 \\\ 0 & 0 & 1\end{bmatrix}
+\begin{bmatrix}1\\1\\1\end{bmatrix}=\begin{bmatrix}1\\2\\1\end{bmatrix}
+\]
+
+\column{0.3\textwidth}
+\textbf{Affine}
+\[
+\tilde{\mathbf{x}}' = \begin{bmatrix}A & \mathbf{t}\\\mathbf{0}^T & 1\end{bmatrix}\tilde{\mathbf{x}}
+\]
+Numeric example:
+\[
+\begin{bmatrix}2 & 0 & 1 \\\ 0 & 1 & -1 \\\ 0 & 0 & 1\end{bmatrix}
+\begin{bmatrix}1\\2\\1\end{bmatrix}=\begin{bmatrix}3\\1\\1\end{bmatrix}
+\]
+\end{columns}
 \end{frame}
 
-\begin{frame}{Forward Mapping Versus Backward Mapping}
+
+\begin{frame}{Interpolation}
 \begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
-\[
-I_{\mathrm{out}}(\mathbf{x}') = I_{\mathrm{in}}\bigl(T^{-1}(\mathbf{x}')\bigr)
-\]
-\vspace{-0.6em}
+\column{0.58\textwidth}
 \begin{itemize}
-\item Forward mapping pushes pixels from input to output and can leave holes.
-\item Backward mapping loops over the output grid and asks: where did this location come from in the input image?
-\item Because $T^{-1}(\mathbf{x}')$ is usually not on an exact pixel center, interpolation is required.
+  \item Interpolation reconstructs a continuous image from discrete samples and provides values at arbitrary coordinates.
+  \item It is required whenever images are resampled, rotated, warped, or when sub-pixel estimates are needed.
+  \item Practical rule: use nearest-neighbor for categorical labels; prefer linear or cubic kernels for intensity images; avoid repeated resampling.
 \end{itemize}
 
-\begin{block}{Why this matters}
-Most practical libraries resample with backward mapping because it guarantees that every output pixel is addressed.
-\end{block}
-
-\column{0.44\textwidth}
+\column{0.38\textwidth}
 \centering
-\begin{tikzpicture}[>=Latex,scale=0.85]
-\draw[gray!70] (0,0) grid (2.8,2.8);
-\foreach \x in {0.5,1.5,2.5}
-  \foreach \y in {0.5,1.5,2.5}
-    \fill[LectureBlue] (\x,\y) circle (1.8pt);
-\node[font=\scriptsize] at (1.4,-0.35) {input grid};
-
-\begin{scope}[xshift=4.0cm,yshift=0.15cm]
-\draw[gray!70,rotate around={15:(1.4,1.25)}] (0,0) rectangle (2.8,2.5);
-\foreach \x in {0.5,1.5,2.5}
-  \foreach \y in {0.5,1.5,2.0}
-    \fill[LectureGold] (\x,\y) circle (1.8pt);
-\node[font=\scriptsize] at (1.4,-0.50) {output grid};
-\end{scope}
-
-\draw[->,thick,LectureTeal] (3.2,1.3) -- (2.9,1.45);
-\draw[->,thick,LectureTeal] (4.8,1.6) -- (2.1,1.1);
+\begin{tikzpicture}[x=1.0cm,y=1.0cm]
+  \draw[->, thick, gray!60] (0,0) -- (4.2,0) node[right,font=\small] {Distance};
+  \draw[->, thick, gray!60] (0,0) -- (0,2.2) node[above,font=\small] {Value};
+  \draw[LectureBlue, line width=1.2pt] (0.6,0.6) -- (3.6,1.9);
+  \filldraw[black] (1.0,0.9) circle (2.6pt) node[below left,font=\scriptsize] {9};
+  \filldraw[black] (3.2,1.8) circle (2.6pt) node[above right,font=\scriptsize] {10};
+  \filldraw[red] (2.1,1.35) circle (3.6pt);
 \end{tikzpicture}
+\end{columns}
+
+\vspace{1em}
+\textbf{Resources \& References:}
+\begin{itemize}
+  \item OpenCV Implementation: \href{https://docs.opencv.org/3.4/da/d54/group__imgproc__transform.html\#ga5bb5a1fea74ea38e1a5445ca803ff121}{\color{blue}imgproc transform documentation}
+  \item PyTorch Input Transforms: \href{https://pytorch.org/vision/stable/models/generated/torchvision.models.resnet50.html\#torchvision.models.resnet50}{\color{blue}Torchvision ResNet50 Specs}
+  \item Further Reading: \href{https://www.mssc.mu.edu/~daniel/pubs/RoweTalkMSCS_BiCubic.pdf}{\color{blue}Bicubic Interpolation Paper (Rowe)}
+\end{itemize}
+
+
+\end{frame}
+
+
+\begin{frame}{Interpolation Choices}
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.17\textwidth} >{\raggedright\arraybackslash}p{0.15\textwidth} >{\raggedright\arraybackslash}p{0.23\textwidth} X}
+\toprule
+Method & Support & Strengths & Use with care \\
+\midrule
+Nearest neighbor & 1 sample & preserves labels exactly, fastest & blocky edges in intensity images \\
+Bilinear & $2 \times 2$ neighborhood & stable default for many intensity images & slight blur after repeated use \\
+Bicubic & $4 \times 4$ neighborhood & smoother appearance, better edge continuity & can ring near sharp transitions \\
+Spline / higher order & larger support & smooth derivatives, useful in scientific resampling & more computation and stronger assumptions \\
+\bottomrule
+\end{tabularx}
+
+
+\end{frame}
+
+
+\begin{frame}{Nearest-Neighbor Interpolation (2D)}
+\begin{columns}[T,onlytextwidth]
+\column{0.55\textwidth}
+\small
+\begin{itemize}
+  \item Assigns the value of the nearest sample point to each 2D query location (constant 2D box/pixel kernel).
+  \item Support: 1 nearest sample. Extremely fast.
+  \item \textbf{Best for:} Segmentation masks, label maps, and discrete data (preserves exact categorical class IDs).
+  \item \textbf{Avoid for:} Continuous intensity images (causes blocky/pixelated artifacts, staircasing, and is non-differentiable).
+\end{itemize}
+
+\column{0.42\textwidth}
+\centering
+\begin{tikzpicture}[scale=1.2, font=\footnotesize]
+  % Grid / Voronoi Cells (Pixel boundaries)
+  \draw[gray!30, dashed] (0,0) grid (3,3);
+  
+  % Colored pixel regions to show "regions of influence"
+  \fill[red!10] (0,1.5) rectangle (1.5,3);
+  \fill[blue!10] (1.5,1.5) rectangle (3,3);
+  \fill[green!10] (0,0) rectangle (1.5,1.5);
+  \fill[yellow!15] (1.5,0) rectangle (3,1.5);
+  
+  % Cell Boundaries (Solid)
+  \draw[gray!60, thick] (0,0) rectangle (3,3);
+  \draw[gray!60, thick] (1.5,0) -- (1.5,3);
+  \draw[gray!60, thick] (0,1.5) -- (3,1.5);
+  
+  % Sample Points (Pixel Centers)
+  \filldraw[black] (0.75, 2.25) circle (2pt) node[above right=-1pt, font=\tiny] {$S_1$};
+  \filldraw[black] (2.25, 2.25) circle (2pt) node[above right=-1pt, font=\tiny] {$S_2$};
+  \filldraw[black] (0.75, 0.75) circle (2pt) node[above right=-1pt, font=\tiny] {$S_3$};
+  \filldraw[black] (2.25, 0.75) circle (2pt) node[above right=-1pt, font=\tiny] {$S_4$};
+  
+  % Query Point
+  \coordinate (Q) at (1.1, 1.9);
+  \filldraw[LectureBlue] (Q) circle (2pt) node[below left=-1pt, LectureBlue] {$Q$};
+  
+  % Arrow to nearest neighbor
+  \draw[->, LectureBlue, thick, >=stealth] (Q) -- (0.75, 2.25);
+  
+  % Labels
+  \node[black, font=\tiny, align=center] at (1.5, -0.3) {2D Pixel Grid / Voronoi Regions};
+\end{tikzpicture}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Bilinear Interpolation}
+\begin{columns}[T,onlytextwidth]
+\column{0.55\textwidth}
+\small
+\begin{itemize}
+  \item Separable linear interpolation across a $2\times2$ neighborhood; weights depend on fractional distances $\Delta x, \Delta y \in [0, 1]$.
+  
+  \item \textbf{Step 1: Horizontal Interpolation}
+  \begin{align*}
+    f(R_1) &= (1-\Delta x)f(Q_{11}) + \Delta x f(Q_{21}) \\
+    f(R_2) &= (1-\Delta x)f(Q_{12}) + \Delta x f(Q_{22})
+  \end{align*}
+
+  \item \textbf{Step 2: Vertical Interpolation}
+  $$f(P) = (1-\Delta y)f(R_1) + \Delta y f(R_2)$$
+
+  \item Continuous ($C^0$) and differentiable almost everywhere; gradients are piecewise linear.
+  \item \textbf{Pros:} Computationally efficient, stable, and differentiable.
+  \item \textbf{Cons:} Acts as a low-pass filter, blurring images over repeated applications.
+\end{itemize}
+
+\column{0.42\textwidth}
+\centering
+\begin{tikzpicture}[scale=1.3, font=\footnotesize]
+  % Define 2x2 bounding pixel coordinates
+  \coordinate (Q11) at (0,0);
+  \coordinate (Q21) at (3,0);
+  \coordinate (Q12) at (0,3);
+  \coordinate (Q22) at (3,3);
+  
+  % Define Query Point P and intermediate interpolation points
+  \coordinate (P) at (1.8, 1.1);
+  \coordinate (R1) at (1.8, 0);
+  \coordinate (R2) at (1.8, 3);
+
+  % Draw fractional area/interpolation boxes
+  \draw[gray!20, fill=LectureGold!5] (0,0) rectangle (1.8,1.1);
+  \draw[gray!20, fill=LectureGold!15] (1.8,1.1) rectangle (3,3);
+
+  % Draw the 2x2 grid cell boundaries
+  \draw[gray!40, thick] (Q11) -- (Q21) -- (Q22) -- (Q12) -- cycle;
+  
+  % Draw 1D interpolation axis paths (Separable steps)
+  \draw[dashed, gray!70] (R1) -- (R2);
+  \draw[dashed, gray!70] (0,1.1) -- (3,1.1);
+
+  % 4 Neighboring Pixel Samples
+  \filldraw[black] (Q11) circle (2.5pt) node[below left] {$Q_{11}$};
+  \filldraw[black] (Q21) circle (2.5pt) node[below right] {$Q_{21}$};
+  \filldraw[black] (Q12) circle (2.5pt) node[above left] {$Q_{12}$};
+  \filldraw[black] (Q22) circle (2.5pt) node[above right] {$Q_{22}$};
+
+  % Intermediate Interpolation Points (Step 1)
+  \filldraw[gray!80] (R1) circle (1.8pt) node[below, font=\tiny, text=black] {$R_1$};
+  \filldraw[gray!80] (R2) circle (1.8pt) node[above, font=\tiny, text=black] {$R_2$};
+
+  % Final Query Point P (Step 2)
+  \filldraw[red] (P) circle (3.2pt) node[above right=1pt, red, font=\small\bfseries] {$P$};
+
+  % Distance dimension labels
+  \draw[<->, >=stealth, gray!80] (0,-0.4) -- node[below, font=\tiny] {$\Delta x$} (1.8,-0.4);
+  \draw[<->, >=stealth, gray!80] (-0.4,0) -- node[left, font=\tiny] {$\Delta y$} (-0.4,1.1);
+\end{tikzpicture}
+\end{columns}
+\end{frame}
+
+% Slide 1: The 2D Separable Process
+\begin{frame}{Bicubic Interpolation: 2D Mechanism}
+\begin{columns}[T,onlytextwidth]
+\column{0.55\textwidth}
+\small
+\begin{itemize}
+    \item Extension of bilinear interpolation using a $4\times4$ neighborhood ($16$ pixels) for $C^1$ continuity.
+    
+    \item \textbf{Step 1: Horizontal Interpolation} \\
+    Calculate 4 intermediate points $R_i$ using 1D cubic passes across rows:
+    \begin{itemize}
+        \scriptsize
+        \item $f(R_{-1}) = \text{Cubic}(I_{-1,-1}, I_{0,-1}, I_{1,-1}, I_{2,-1}; \Delta x)$
+        \item $f(R_0) \,\,= \text{Cubic}(I_{-1,0}, I_{0,0}, I_{1,0}, I_{2,0}; \Delta x)$
+        \item $f(R_1) \,\,= \text{Cubic}(I_{-1,1}, I_{0,1}, I_{1,1}, I_{2,1}; \Delta x)$
+        \item $f(R_2) \,\,= \text{Cubic}(I_{-1,2}, I_{0,2}, I_{1,2}, I_{2,2}; \Delta x)$
+    \end{itemize}
+
+    \item \textbf{Step 2: Vertical Interpolation} \\
+    Calculate the final value at point $P$ using a vertical 1D cubic pass:
+    \scriptsize
+    \[ f(P) = \text{Cubic}(f(R_{-1}), f(R_0), f(R_1), f(R_2); \Delta y) \]
+
+    \small
+    \item \textbf{Result:} Smoother gradients and sharper edges compared to Bilinear, but at higher cost.
+\end{itemize}
+
+\column{0.42\textwidth}
+\centering
+\begin{tikzpicture}[scale=1.1, font=\footnotesize]
+  % Coordinates for 4x4 grid
+  \foreach \x in {0,1,2,3} \foreach \y in {0,1,2,3} \coordinate (I\x\y) at (\x,\y);
+  
+  \coordinate (P) at (1.4, 1.6); % Target point
+  
+  % Interpolation boxes
+  \draw[gray!20, fill=LectureGold!5] (1,1) rectangle (1.4,1.6);
+  \draw[gray!20, fill=LectureGold!15] (1.4,1.6) rectangle (2,2);
+
+  \draw[gray!40, thick, dashed] (-0.2,-0.2) rectangle (3.2,3.2);
+  
+  % Grid lines
+  \foreach \y in {0,1,2,3} \draw[gray!30, thin] (0,\y) -- (3,\y);
+  \draw[dashed, gray!70] (1.4, 0) -- (1.4, 3); % Vertical Step 2 line
+
+  % Neighbor samples
+  \foreach \x in {0,1,2,3} \foreach \y in {0,1,2,3} \fill[black] (\x,\y) circle (1.8pt);
+  
+  % Labels
+  \node[below left, font=\tiny] at (0,0) {$I_{-1,-1}$};
+  \node[above right, font=\tiny] at (3,3) {$I_{2,2}$};
+
+  % Intermediate R Points
+  \foreach \y [count=\i from -1] in {0,1,2,3} {
+    \filldraw[gray!80] (1.4,\y) circle (1.5pt) node[right, font=\tiny, text=black] {$R_{\i}$};
+  }
+
+  % Final Point P
+  \filldraw[red] (P) circle (2.8pt) node[above right, red, font=\small\bfseries] {$P$};
+
+  % Distances
+  \draw[<->, >=stealth, gray!80] (1, 0.5) -- node[below, font=\tiny] {$\Delta x$} (1.4, 0.5);
+  \draw[<->, >=stealth, gray!80] (0.5, 1) -- node[left, font=\tiny] {$\Delta y$} (0.5, 1.6);
+\end{tikzpicture}
+\end{columns}
+\end{frame}
+
+% Slide 2: The Cubic Kernel Math
+\begin{frame}{Bicubic Interpolation: The Cubic Function}
+\begin{columns}[T,onlytextwidth]
+\column{0.55\textwidth}
+\small
+\begin{itemize}
+    \item The $\text{Cubic}(p_{-1}, p_0, p_1, p_2; x)$ function fits a 3rd-degree polynomial through 4 points.
+    \item Typically uses the \textbf{Catmull-Rom} spline to ensure the curve passes through $p_0$ and $p_1$ while maintaining slope continuity.
+    
+    \item \textbf{Polynomial Form:}
+    \[ f(x) = a_3x^3 + a_2x^2 + a_1x + a_0 \]
+    
+    \item \textbf{Key Trait:} Unlike linear weight (straight lines), cubic weights can be negative, leading to "overshoot" which increases perceived sharpness.
+\end{itemize}
+
+\column{0.42\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.8]
+    % Draw the Cubic Kernel Shape (Catmull-Rom)
+    \draw[->, gray!60] (-2.2,0) -- (2.2,0) node[right, font=\tiny] {$x$};
+    \draw[->, gray!60] (0,-0.5) -- (0,1.5) node[above, font=\tiny] {$W(x)$};
+    
+    % The kernel curve
+    \draw[LectureBlue, very thick, samples=100, domain=-2:2] plot (\x, {
+        abs(\x) <= 1 ? (1.5*abs(\x)^3 - 2.5*abs(\x)^2 + 1) : 
+        (abs(\x) <= 2 ? (-0.5*abs(\x)^3 + 2.5*abs(\x)^2 - 4*abs(\x) + 2) : 0)
+    });
+    
+    % Node labels
+    \filldraw[black] (0,1) circle (2pt) node[above right, font=\tiny] {$1.0$};
+    \filldraw[black] (1,0) circle (2pt) node[below, font=\tiny] {$1$};
+    \filldraw[black] (-1,0) circle (2pt) node[below, font=\tiny] {$-1$};
+    \node[LectureBlue, font=\tiny] at (1.2,0.6) {Kernel $W(x)$};
+\end{tikzpicture}
+\vfill
+\scriptsize\textcolor{gray}{Note: Matrix coefficients map pixels to the range $[0, 1]$ relative to the central interval.}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cubic Spline: Derivative-Based Formulation}
+\begin{columns}[T,onlytextwidth]
+\column{0.55\textwidth}
+\small
+\begin{itemize}
+    \item Instead of using specialized basis functions, we fit a standard third-degree polynomial between pixels $p_0$ and $p_1$:
+    \[ f(x) = ax^3 + bx^2 + cx + d \]
+    where $x \in$ is the fractional distance.
+
+    \item \textbf{1. Setting up the Constraints:} \\
+    To find the 4 unknown coefficients ($a, b, c, d$), we enforce 4 conditions based on pixel values and their slopes ($m_0, m_1$):
+    \begin{itemize}
+        \scriptsize
+        \item \textbf{Value at $x=0$:} $f(0) = d = p_0$
+        \item \textbf{Value at $x=1$:} $f(1) = a + b + c + d = p_1$
+        \item \textbf{Slope at $x=0$:} $f'(0) = c = m_0$
+        \item \textbf{Slope at $x=1$:} $f'(1) = 3a + 2b + c = m_1$
+    \end{itemize}
+
+    \small
+    \item \textbf{2. Solving for the Coefficients:} \\
+    Solving this system of linear equations yields:
+    \scriptsize
+    \begin{align*}
+        a &= 2p_0 - 2p_1 + m_0 + m_1 \\
+        b &= -3p_0 + 3p_1 - 2m_0 - m_1 \\
+        c &= m_0 \\
+        d &= p_0
+    \end{align*}
+
+\end{itemize}
+
+\column{0.42\textwidth}
+\centering
+\begin{tikzpicture}[scale=1.2, font=\footnotesize]
+    % Axes
+    \draw[->, gray!60] (-0.5,0) -- (2.5,0) node[right] {$x$};
+    \draw[->, gray!60] (0,-0.2) -- (0,2.2) node[above] {$f(x)$};
+
+    % Control Points
+    \coordinate (Pm1) at (-0.8, 0.4);
+    \coordinate (P0)  at (0, 0.8);
+    \coordinate (P1)  at (1.5, 1.6);
+    \coordinate (P2)  at (2.3, 1.2);
+
+    % Draw support points (ghost points)
+    \filldraw[gray!40] (Pm1) circle (1.5pt) node[below, font=\tiny] {$p_{-1}$};
+    \filldraw[gray!40] (P2)  circle (1.5pt) node[below, font=\tiny] {$p_{2}$};
+
+    % Main segment points
+    \filldraw[black] (P0) circle (2pt) node[left] {$p_0$};
+    \filldraw[black] (P1) circle (2pt) node[right] {$p_1$};
+
+    % Tangent lines (Derivatives)
+    \draw[dashed, LectureBlue, thick, <->] (-0.4, 0.5) -- (0.4, 1.1) node[above, font=\tiny] {$m_0$};
+    \draw[dashed, LectureBlue, thick, <->] (1.1, 1.8) -- (1.9, 1.4) node[above, font=\tiny] {$m_1$};
+
+    % The Spline Curve
+    \draw[LectureGold, very thick] (P0) .. controls (0.5, 1.2) and (1.0, 1.9) .. (P1);
+
+    % Query Point P(t)
+    \coordinate (Pt) at (0.7, 1.35);
+    \filldraw[red] (Pt) circle (2.5pt) node[above, font=\tiny\bfseries] {$P(t)$};
+    
+    % Distance Label
+    \draw[<->, >=stealth, gray!80] (0, -0.3) -- node[below, font=\tiny] {$t = \Delta x$} (0.7, -0.3);
+    \draw[dotted, gray] (0.7,0) -- (Pt);
+\end{tikzpicture}
+
+\vfill
+\scriptsize\textcolor{gray}{Visual: Derivatives $m_0, m_1$ control the shape/curvature of the segment between $p_0$ and $p_1$.}
+\vfill
+\vspace{1em}
+
+\textbf{Slopes ($m_i$):} Usually estimated from neighboring pixels via central differences: $m_0 = \frac{p_1 - p_{-1}}{2}$.
+\vspace{1em}
+
+\textbf{Benefit:} This ensures \textbf{$C^1$ continuity} (the slope is the same on both sides of a pixel), preventing visible "seams" in upscaled images.
 \end{columns}
 \end{frame}
 
@@ -383,9 +829,7 @@ I(x,y) = \sum_{m,n} I[m,n] \, \phi(x-m)\,\phi(y-n)
 \item Cubic methods use smoother kernels with wider support.
 \end{itemize}
 
-\begin{block}{Advanced viewpoint}
-Interpolation is not merely filling gaps. It imposes an assumption about the class of continuous functions consistent with the sampled data.
-\end{block}
+
 
 \column{0.36\textwidth}
 \centering
@@ -397,41 +841,11 @@ Interpolation is not merely filling gaps. It imposes an assumption about the cla
 \node[font=\scriptsize,LectureGold] at (1.2,1.65) {triangle};
 \node[font=\scriptsize,LectureBlue] at (2.7,1.8) {box};
 \end{tikzpicture}
+
+\href{https://www.youtube.com/watch?v=Xj129kA3Ci0}{\color{blue}Animation}
+
 \end{columns}
-\end{frame}
 
-\begin{frame}{Interpolation Choices}
-\small
-\begin{tabularx}{\textwidth}{>{\bfseries}p{0.17\textwidth} >{\raggedright\arraybackslash}p{0.15\textwidth} >{\raggedright\arraybackslash}p{0.23\textwidth} X}
-\toprule
-Method & Support & Strengths & Use with care \\
-\midrule
-Nearest neighbor & 1 sample & preserves labels exactly, fastest & blocky edges in intensity images \\
-Bilinear & $2 \times 2$ neighborhood & stable default for many intensity images & slight blur after repeated use \\
-Bicubic & $4 \times 4$ neighborhood & smoother appearance, better edge continuity & can ring near sharp transitions \\
-Spline / higher order & larger support & smooth derivatives, useful in scientific resampling & more computation and stronger assumptions \\
-\bottomrule
-\end{tabularx}
-
-\vspace{0.6em}
-\begin{alertblock}{Golden rule}
-Intensity images and segmentation masks should almost never be resampled with the same interpolation rule.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Bilinear Interpolation Written Explicitly}
-\small
-Suppose $(x,y)$ lies inside the cell with corner intensities $I_{00}, I_{10}, I_{01}, I_{11}$ and local coordinates $\alpha, \beta \in [0,1]$.
-
-\[
-I(x,y) = (1-\alpha)(1-\beta)I_{00} + \alpha(1-\beta)I_{10} + (1-\alpha)\beta I_{01} + \alpha\beta I_{11}
-\]
-
-\begin{itemize}
-\item The weights sum to one, so constants are preserved.
-\item The estimate is linear along each axis, but repeated use still smooths high-frequency detail.
-\item For differentiable image warping, this formula is attractive because gradients are simple almost everywhere.
-\end{itemize}
 \end{frame}
 
 \begin{frame}{Interpolation Has a Spectral Interpretation}
@@ -444,9 +858,6 @@ I(x,y) = (1-\alpha)(1-\beta)I_{00} + \alpha(1-\beta)I_{10} + (1-\alpha)\beta I_{
 \item Higher-order kernels can better preserve smooth structure but may introduce ringing.
 \end{itemize}
 
-\begin{block}{Why this slide is here}
-We are not doing a full Fourier lecture, but PhD students should know that interpolation is a filtering decision in disguise.
-\end{block}
 
 \column{0.41\textwidth}
 \centering
@@ -461,33 +872,6 @@ We are not doing a full Fourier lecture, but PhD students should know that inter
 \end{columns}
 \end{frame}
 
-\begin{frame}{Boundary Conditions and Repeated Resampling}
-\begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
-\begin{itemize}
-\item Outside-image values must be defined: zero padding, border replication, reflection, or periodic wrap.
-\item Boundary choices change local statistics and may create artifacts near the image edge.
-\item Repeated interpolation compounds smoothing and can slowly drift geometry.
-\end{itemize}
-
-\begin{block}{Best practice}
-Compose geometric transforms first and resample once whenever possible.
-\end{block}
-
-\column{0.42\textwidth}
-\small
-\begin{tabularx}{\linewidth}{>{\bfseries}p{0.33\linewidth} X}
-\toprule
-Rule & Consequence \\
-\midrule
-Zero pad & dark halo risk \\
-Replicate & flat edges \\
-Reflect & often visually stable \\
-Wrap & rarely physical in imaging \\
-\bottomrule
-\end{tabularx}
-\end{columns}
-\end{frame}
 
 \begin{frame}{Labels Are Not Intensities}
 \begin{columns}[T,onlytextwidth]
@@ -511,71 +895,7 @@ Label map & nearest neighbor \\
 \end{columns}
 \end{frame}
 
-\begin{frame}{3D Images Add Another Layer of Difficulty}
-\begin{columns}[T,onlytextwidth]
-\column{0.54\textwidth}
-\begin{itemize}
-\item Many volumetric datasets are anisotropic: in-plane spacing differs from through-plane spacing.
-\item Resampling to isotropic voxels can simplify analysis, but the through-plane direction may contain less true information.
-\item Thin-slice and thick-slice data should not be treated as equivalent just because arrays are resampled to the same shape.
-\end{itemize}
 
-\begin{block}{Practical warning}
-Resampling can standardize geometry, but it cannot create missing anatomical detail along poorly sampled directions.
-\end{block}
-
-\column{0.40\textwidth}
-\[
-\Delta_x \neq \Delta_y \neq \Delta_z
-\]
-\vspace{-0.4em}
-\begin{itemize}
-\item voxel shape matters
-\item slice thickness matters
-\item metadata matters
-\end{itemize}
-\end{columns}
-\end{frame}
-
-\begin{frame}{A Practical Resampling Checklist}
-\begin{columns}[T,onlytextwidth]
-\column{0.49\textwidth}
-\begin{block}{Before resampling}
-\begin{itemize}
-\item Define the reference grid: size, spacing, origin, and orientation.
-\item Decide whether the task is visualization, measurement, or model input preparation.
-\item Use anti-alias filtering before aggressive downsampling.
-\end{itemize}
-\end{block}
-
-\column{0.49\textwidth}
-\begin{block}{During resampling}
-\begin{itemize}
-\item Use backward mapping.
-\item Choose interpolation that matches the data type.
-\item Track geometry metadata so physical distances remain meaningful.
-\end{itemize}
-\end{block}
-\end{columns}
-
-\vspace{0.6em}
-\begin{alertblock}{Common mistake}
-Changing image size without updating pixel spacing creates visually plausible images that are geometrically wrong.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Discussion Checkpoint}
-\begin{block}{Think before the break}
-You receive multi-site CT images with different spacings, reconstruction kernels, and intensity ranges. You want to train one model across all sites.
-\end{block}
-
-\vspace{0.5em}
-\begin{enumerate}
-\item Which differences should be normalized by preprocessing?
-\item Which differences reflect genuine information loss rather than nuisance variation?
-\item Which choices risk making the model easier to train but less scientifically valid?
-\end{enumerate}
-\end{frame}
 
 \begin{frame}{Deep Learning Still Depends on Classical Image Manipulation}
 \begin{columns}[T,onlytextwidth]
@@ -593,7 +913,6 @@ You receive multi-site CT images with different spacings, reconstruction kernels
 \begin{itemize}
 \item flips, rotations, zoom, and elastic warps
 \item label geometry must follow the image exactly
-\item augmentation cannot recover detail lost by undersampling
 \end{itemize}
 \end{block}
 
@@ -627,104 +946,102 @@ Neural networks can learn where to sample, but they still inherit the mathematic
 \end{alertblock}
 \end{frame}
 
-\begin{frame}{Learned Upsampling Does Not Nullify Sampling Theory}
-\begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
-\begin{itemize}
-\item Super-resolution can produce plausible high-frequency content by using learned priors.
-\item This is not the same as recovering the exact pre-sampled signal.
-\item For scientific or medical tasks, visually convincing hallucination may be harmful.
-\end{itemize}
-
-\begin{block}{PhD-level distinction}
-There is a difference between perceptual realism, statistical plausibility, and faithful recovery of the original scene.
-\end{block}
-
-\column{0.42\textwidth}
-\begin{alertblock}{Ask this in papers}
-Is the method optimizing appearance, downstream prediction, or physical fidelity?
-\end{alertblock}
-\end{columns}
+\begin{frame}{Spatial Transformer Networks (STN) [cite: 150]}
+    \textbf{Global Learnable Geometry} [cite: 151]\\
+    Jaderberg et al. (2015) introduced the STN as a modular component that allows a network to actively transform data spatially. [cite: 152]
+    
+    \vspace{0.5em}
+    \begin{itemize}
+        \item \textbf{Localisation Net:} Regresses transformation parameters $\theta$ (e.g., affine, TPS). [cite: 153]
+        \item \textbf{Grid Generator:} Produces a sampling grid based on $\theta$. [cite: 154]
+        \item \textbf{Sampler:} Interpolates input at the generated grid points. [cite: 155]
+    \end{itemize}
 \end{frame}
 
-\begin{frame}{Augmentation Is Geometry Plus Assumption}
-\begin{columns}[T,onlytextwidth]
-\column{0.50\textwidth}
-\begin{itemize}
-\item Rotations, flips, elastic warps, and crops encode beliefs about nuisance variation.
-\item If the augmentation violates the acquisition process or anatomy, the model learns unrealistic invariances.
-\item For labels, every augmentation rule must be mirrored by a compatible label transform.
-\end{itemize}
+\begin{frame}{The Differentiable Sampler [cite: 169]}
+    For a network to learn geometry via backpropagation, the sampling must be differentiable. [cite: 170]\\
+    \vspace{0.5em}
+    Bilinear sampling for a target pixel $V_i$ at source location $(x_i,y_i)$[cite: 171]:
+    $$V_{i}^{c}=\sum_{n}\sum_{m}U_{nm}^{c}\max(0,1-|x_{i}^{s}-m|)\max(0,1-|y_{i}^{s}-n|)$$ [cite: 172]
+    
+    \textbf{Forward Pass} [cite: 173]\\
+    Classic bilinear interpolation but the coordinates are outputs of a previous layer, not a fixed scaling factor. [cite: 174]\\
+    \vspace{0.5em}
 
-\column{0.44\textwidth}
-\begin{block}{Good augmentation asks}
-Which transformations preserve the task label in the real world?
-\end{block}
-
-\begin{alertblock}{Bad augmentation asks}
-What can we randomize because the library supports it?
-\end{alertblock}
-\end{columns}
+    \textbf{Backward Pass} [cite: 175]\\
+    Partial derivatives $\frac{\partial V}{\partial x}$ and $\frac{\partial V}{\partial y}$ allow the network to "push" sampling points toward features that minimize loss. [cite: 176]
 \end{frame}
 
-\begin{frame}{Example Workflow: CT Scan to Model Input}
-\begin{columns}[T,onlytextwidth]
-\column{0.35\textwidth}
-\includegraphics[width=\linewidth]{ct.jpeg}
-
-\column{0.61\textwidth}
-\begin{enumerate}
-\item Start from the acquired scanner grid with its own spacing and intensity precision.
-\item Resample to a common target spacing so anatomy has a consistent physical scale.
-\item Window or normalize intensities for the downstream task.
-\item Crop or pad to the model input size.
-\item If labels exist, transform them with the same geometry but nearest-neighbor interpolation.
-\end{enumerate}
-
-\vspace{0.5em}
-\begin{block}{Interpretation}
-The network never sees the original scene directly. It sees a sampled, quantized, and resampled tensor whose quality depends on all earlier design choices.
-\end{block}
-\end{columns}
+\begin{frame}{Deformable Convolutions (DCN) [cite: 177]}
+    \textbf{Local vs. Global Geometry} [cite: 178]\\
+    While STN applies a global warp, Deformable CNNs (Dai et al., 2017) learn local offsets for every convolution kernel position. [cite: 179]
+    
+    \vspace{0.5em}
+    \begin{itemize}
+        \item The receptive field adapts to object shape. [cite: 180]
+        \item Offsets $\Delta p_n$ are learned via an auxiliary convolution branch. [cite: 181]
+        \item Crucial for non-rigid objects and varying perspectives. [cite: 182]
+    \end{itemize}
 \end{frame}
 
-\begin{frame}{Failure Modes in Machine-Learning Pipelines}
-\small
-\begin{tabularx}{\textwidth}{>{\bfseries}p{0.28\textwidth} X}
-\toprule
-Failure mode & Consequence \\
-\midrule
-Resizing all images to one shape without respecting spacing & anatomy appears at inconsistent physical scales \\
-Linear interpolation on masks & invalid labels and boundary corruption \\
-Repeated random resampling in data loading & hidden blur and train-test mismatch \\
-Aggressive windowing before analysis & loss of subtle intensity structure \\
-Ignoring acquisition blur differences across scanners & site-specific artifacts masquerade as biological signal \\
-\bottomrule
-\end{tabularx}
+\begin{frame}{DCN: Mathematical Offset Logic [cite: 184]}
+    In a standard convolution, the output $y(p_0)$ is a weighted sum over a fixed grid $R$. [cite: 185]\\
+    In DCN, we add a fractional offset $\Delta p_n$[cite: 186]:
+    $$y(p_{0})=\sum_{p_{n}\in R}w(p_{n})\cdot x(p_{0}+p_{n}+\Delta p_{n})$$ [cite: 187]
+    \vspace{1em}
+
+    \begin{table}[]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{|l|l|l|}
+    \hline
+    \textbf{Component} & \textbf{Standard Convolution} & \textbf{Deformable Convolution} \\ \hline
+    Sampling Grid & Fixed (e.g., $3 \times 3$) & Arbitrary (Learnable offsets) \\ \hline
+    Receptive Field & Constant Shape & Data-adaptive Shape \\ \hline
+    Interpolation & Not Required (on-grid) & Required (Bilinear at offsets) \\ \hline
+    \end{tabular}%
+    }
+    \end{table} [cite: 188]
 \end{frame}
 
-\begin{frame}{Seminar Prompt}
-\begin{block}{A good research question}
-When a model trained on one imaging protocol fails on another, how much of the error is due to representation mismatch rather than model capacity?
-\end{block}
-
-\vspace{0.6em}
-\begin{itemize}
-\item What would you standardize?
-\item What would you leave untouched to preserve scientific validity?
-\item How would you design an ablation to separate geometry effects from model effects?
-\end{itemize}
+\begin{frame}{Implicit Neural Representations (INR) [cite: 189]}
+    \textbf{Continuous Digital Signal} [cite: 190]\\
+    Instead of storing pixels, we learn a function $f_{\theta}: \mathbb{R}^2 \rightarrow \mathbb{R}^3$ that maps coordinates to values. [cite: 191, 192]
+    
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Infinite resolution potential. [cite: 193]
+        \item Differentiable with respect to space. [cite: 194]
+        \item No discrete kernel-the MLP is the interpolator. [cite: 195]
+    \end{itemize}
 \end{frame}
 
-\begin{frame}{Take-Home Messages}
-\begin{itemize}
-\item A digital image is the output of an acquisition model, not a neutral copy of reality.
-\item Sampling, blur, quantization, cropping, and resampling each impose distinct information limits.
-\item Geometry requires explicit coordinate reasoning; array shape alone is not enough.
-\item Interpolation is a modeling choice with spatial, spectral, and statistical consequences.
-\item Deep-learning pipelines still rest on these classical decisions, even when the warping is differentiable or learned.
-\end{itemize}
+\begin{frame}{Regularizing Geometric Learning [cite: 200]}
+    Unconstrained learning of transformations leads to self-intersecting grids and unrealistic artifacts. We enforce smoothness via regularization: [cite: 201]
+    \vspace{1em}
+
+    \textbf{Total Variation (TV)} [cite: 202]\\
+    Prevents jerky, non-smooth displacement fields. Essential for visual consistency. [cite: 206]
+    $$L_{smooth}=\int||\nabla\phi(x)||^{2}dx$$ [cite: 203]
+
+    \textbf{Bending Energy} [cite: 204]\\
+    Derived from Thin-Plate Splines. Penalizes second-order curvature to ensure diffeomorphic maps. [cite: 207]
+    $$L_{bend}=\int||\nabla^{2}\phi(x)||^{2}dx$$ [cite: 205]
 \end{frame}
+
+\begin{frame}{Medical Image Registration [cite: 208]}
+    \textbf{Learnable Elastic Warps} [cite: 209]\\
+    In medical imaging, we often need to align a Source image to a Target (e.g., pre-op vs. post-op). [cite: 210]
+    
+    \vspace{0.5em}
+    \begin{itemize}
+        \item Classical methods (Demons, B-Splines) are slow optimization loops. [cite: 211]
+        \item Deep models (VoxelMorph) learn a global function that predicts the displacement field in milliseconds, treating registration as a feed-forward inference task. [cite: 212]
+    \end{itemize}
+    \vspace{1em}
+    \textit{PhD Note: The grid sampler here acts as a physical constraint-the image cannot "break" if the warp is diffeomorphic.} [cite: 213]
+\end{frame}
+
 
 \begin{frame}{Suggested Reading}
 \small
