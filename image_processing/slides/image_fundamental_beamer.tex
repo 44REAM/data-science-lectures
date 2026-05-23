@@ -702,8 +702,6 @@ Spline / higher order & larger support & smooth derivatives, useful in scientifi
 \small
 \begin{itemize}
     \item The $\text{Cubic}(p_{-1}, p_0, p_1, p_2; x)$ function fits a 3rd-degree polynomial through 4 points.
-    \item Typically uses the \textbf{Catmull-Rom} spline to ensure the curve passes through $p_0$ and $p_1$ while maintaining slope continuity.
-    
     \item \textbf{Polynomial Form:}
     \[ f(x) = a_3x^3 + a_2x^2 + a_1x + a_0 \]
     
@@ -848,7 +846,7 @@ I(x,y) = \sum_{m,n} I[m,n] \, \phi(x-m)\,\phi(y-n)
 
 \end{frame}
 
-\begin{frame}{Interpolation Has a Spectral Interpretation}
+\begin{frame}{Interpolation Has a Spectral (Frequency) Interpretation}
 \begin{columns}[T,onlytextwidth]
 \column{0.53\textwidth}
 \begin{itemize}
@@ -873,7 +871,7 @@ I(x,y) = \sum_{m,n} I[m,n] \, \phi(x-m)\,\phi(y-n)
 \end{frame}
 
 
-\begin{frame}{Labels Are Not Intensities}
+\begin{frame}{Common Interpolation Methods}
 \begin{columns}[T,onlytextwidth]
 \column{0.50\textwidth}
 \begin{itemize}
@@ -919,75 +917,32 @@ Label map & nearest neighbor \\
 \column{0.32\textwidth}
 \begin{block}{Learnable geometry}
 \begin{itemize}
-\item Spatial Transformer Networks predict a warp and then resample differentiably
-\item the grid sampler is classical interpolation inside a neural network
-\item modern models still inherit the same resampling trade-offs
+\item Deformable Convolutions (DCN)
 \end{itemize}
 \end{block}
 \end{columns}
 \end{frame}
 
-\begin{frame}{Differentiable Resampling Inside Neural Networks}
-\small
-Spatial Transformer Networks use a learned transform and a differentiable sampler. For bilinear sampling,
 
-\[
-V_i^c = \sum_n \sum_m U_{nm}^c \max(0,1-|x_i^s-m|)\max(0,1-|y_i^s-n|)
-\]
 
-\begin{itemize}
-\item $U$: input feature map, $V$: output feature map
-\item $(x_i^s, y_i^s)$: sampled source coordinate predicted by the network
-\item The sampler is modern deep learning built on classical interpolation
-\end{itemize}
-
-\begin{alertblock}{Important perspective}
-Neural networks can learn where to sample, but they still inherit the mathematical biases of the interpolation kernel.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Spatial Transformer Networks (STN) [cite: 150]}
-    \textbf{Global Learnable Geometry} [cite: 151]\\
-    Jaderberg et al. (2015) introduced the STN as a modular component that allows a network to actively transform data spatially. [cite: 152]
+\begin{frame}{Deformable Convolutions (DCN)}
+    \textbf{Local vs. Global Geometry}\\
+    While STN applies a global warp, Deformable CNNs (Dai et al., 2017) learn local offsets for every convolution kernel position. 
     
     \vspace{0.5em}
     \begin{itemize}
-        \item \textbf{Localisation Net:} Regresses transformation parameters $\theta$ (e.g., affine, TPS). [cite: 153]
-        \item \textbf{Grid Generator:} Produces a sampling grid based on $\theta$. [cite: 154]
-        \item \textbf{Sampler:} Interpolates input at the generated grid points. [cite: 155]
+        \item The receptive field adapts to object shape. 
+        \item Offsets $\Delta p_n$ are learned via an auxiliary convolution branch.
+        \item Crucial for non-rigid objects and varying perspectives.
     \end{itemize}
+    \vfill
+    {\tiny J. Dai et al., \textit{Deformable Convolutional Networks}, ICCV 2017.}
 \end{frame}
 
-\begin{frame}{The Differentiable Sampler [cite: 169]}
-    For a network to learn geometry via backpropagation, the sampling must be differentiable. [cite: 170]\\
-    \vspace{0.5em}
-    Bilinear sampling for a target pixel $V_i$ at source location $(x_i,y_i)$[cite: 171]:
-    $$V_{i}^{c}=\sum_{n}\sum_{m}U_{nm}^{c}\max(0,1-|x_{i}^{s}-m|)\max(0,1-|y_{i}^{s}-n|)$$ [cite: 172]
-    
-    \textbf{Forward Pass} [cite: 173]\\
-    Classic bilinear interpolation but the coordinates are outputs of a previous layer, not a fixed scaling factor. [cite: 174]\\
-    \vspace{0.5em}
-
-    \textbf{Backward Pass} [cite: 175]\\
-    Partial derivatives $\frac{\partial V}{\partial x}$ and $\frac{\partial V}{\partial y}$ allow the network to "push" sampling points toward features that minimize loss. [cite: 176]
-\end{frame}
-
-\begin{frame}{Deformable Convolutions (DCN) [cite: 177]}
-    \textbf{Local vs. Global Geometry} [cite: 178]\\
-    While STN applies a global warp, Deformable CNNs (Dai et al., 2017) learn local offsets for every convolution kernel position. [cite: 179]
-    
-    \vspace{0.5em}
-    \begin{itemize}
-        \item The receptive field adapts to object shape. [cite: 180]
-        \item Offsets $\Delta p_n$ are learned via an auxiliary convolution branch. [cite: 181]
-        \item Crucial for non-rigid objects and varying perspectives. [cite: 182]
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{DCN: Mathematical Offset Logic [cite: 184]}
-    In a standard convolution, the output $y(p_0)$ is a weighted sum over a fixed grid $R$. [cite: 185]\\
-    In DCN, we add a fractional offset $\Delta p_n$[cite: 186]:
-    $$y(p_{0})=\sum_{p_{n}\in R}w(p_{n})\cdot x(p_{0}+p_{n}+\Delta p_{n})$$ [cite: 187]
+\begin{frame}{DCN: Mathematical Offset Logic }
+    In a standard convolution, the output $y(p_0)$ is a weighted sum over a fixed grid $R$.\\
+    In DCN, we add a fractional offset $\Delta p_n$:
+    $$y(p_{0})=\sum_{p_{n}\in R}w(p_{n})\cdot x(p_{0}+p_{n}+\Delta p_{n})$$ 
     \vspace{1em}
 
     \begin{table}[]
@@ -1001,47 +956,147 @@ Neural networks can learn where to sample, but they still inherit the mathematic
     Interpolation & Not Required (on-grid) & Required (Bilinear at offsets) \\ \hline
     \end{tabular}%
     }
-    \end{table} [cite: 188]
+    \end{table}
+    \vfill
+    {\tiny J. Dai et al., \textit{Deformable Convolutional Networks}, ICCV 2017.}
 \end{frame}
 
-\begin{frame}{Implicit Neural Representations (INR) [cite: 189]}
-    \textbf{Continuous Digital Signal} [cite: 190]\\
-    Instead of storing pixels, we learn a function $f_{\theta}: \mathbb{R}^2 \rightarrow \mathbb{R}^3$ that maps coordinates to values. [cite: 191, 192]
-    
-    \vspace{0.5em}
-    \begin{itemize}
-        \item Infinite resolution potential. [cite: 193]
-        \item Differentiable with respect to space. [cite: 194]
-        \item No discrete kernel-the MLP is the interpolator. [cite: 195]
-    \end{itemize}
+\begin{frame}{DCN: Standard vs.\ Deformable Sampling Grid}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\textbf{Standard convolution}
+\begin{itemize}\small
+  \item Samples at a fixed, regular $3\times3$ grid relative to each output center $p_0$.
+  \item The same geometric neighborhood is used regardless of image content.
+\end{itemize}
+\vspace{0.5em}
+\centering
+\begin{tikzpicture}[scale=0.72]
+  \draw[gray!25] (0,0) grid (4,4);
+  \foreach \dx in {-1,0,1} \foreach \dy in {-1,0,1}
+    \filldraw[LectureBlue] (2+\dx, 2+\dy) circle (3pt);
+  \filldraw[LectureGold] (2,2) circle (4.5pt) node[above right, font=\tiny] {$p_0$};
+  \node[font=\scriptsize] at (2,-0.35) {fixed $3\times3$ grid};
+\end{tikzpicture}
+
+\column{0.48\textwidth}
+\textbf{Deformable convolution}
+\begin{itemize}\small
+  \item Adds learned offsets $\Delta p_n$ to each grid position.
+  \item Sampling locations adapt to local object shape and scale.
+\end{itemize}
+\vspace{0.5em}
+\centering
+\begin{tikzpicture}[scale=0.72]
+  \draw[gray!25] (0,0) grid (4,4);
+  \foreach \x/\y in {0.7/1.2, 1.6/0.55, 2.85/0.85, 0.5/2.1, 2.05/2.05,
+                     3.25/2.15, 1.0/3.3, 2.2/3.55, 3.3/3.05}
+    \filldraw[LectureTeal] (\x,\y) circle (3pt);
+  \filldraw[LectureGold] (2,2) circle (4.5pt) node[above right, font=\tiny] {$p_0$};
+  \node[font=\scriptsize] at (2,-0.35) {adaptive grid (DCN)};
+\end{tikzpicture}
+\end{columns}
+\vfill
+{\tiny J. Dai et al., \textit{Deformable Convolutional Networks}, ICCV 2017.}
 \end{frame}
 
-\begin{frame}{Regularizing Geometric Learning [cite: 200]}
-    Unconstrained learning of transformations leads to self-intersecting grids and unrealistic artifacts. We enforce smoothness via regularization: [cite: 201]
-    \vspace{1em}
+\begin{frame}{DCN Architecture: Two-Branch Design}
+\begin{columns}[T,onlytextwidth]
+\column{0.52\textwidth}
+\small
+\begin{itemize}
+  \item \textbf{Offset branch:} a standard $p\!\times\!p$ convolution applied to the input feature map, outputting $2N$ channels — one $(\Delta x, \Delta y)$ pair per kernel position $n$.
+  \item \textbf{Main branch:} uses those offsets to sample the feature map at fractional locations via bilinear interpolation, then applies the learned weights $w(p_n)$.
+  \item Both branches share the same input and are trained end-to-end.
+  \item Added parameter cost is small: one extra convolution of identical kernel size.
+\end{itemize}
 
-    \textbf{Total Variation (TV)} [cite: 202]\\
-    Prevents jerky, non-smooth displacement fields. Essential for visual consistency. [cite: 206]
-    $$L_{smooth}=\int||\nabla\phi(x)||^{2}dx$$ [cite: 203]
+\column{0.44\textwidth}
+\centering
+\begin{tikzpicture}[node distance=0.55cm, >=Latex, font=\small]
+  \tikzstyle{dcnbox}=[draw=LectureBlue, rounded corners, thick,
+                   minimum width=2.7cm, minimum height=0.65cm, fill=LectureBlue!8]
+  \tikzstyle{dcnsbox}=[draw=LectureTeal, rounded corners, thick,
+                    minimum width=2.7cm, minimum height=0.65cm, fill=LectureTeal!8, align=center]
 
-    \textbf{Bending Energy} [cite: 204]\\
-    Derived from Thin-Plate Splines. Penalizes second-order curvature to ensure diffeomorphic maps. [cite: 207]
-    $$L_{bend}=\int||\nabla^{2}\phi(x)||^{2}dx$$ [cite: 205]
+  \node[dcnbox] (feat)   {feature map $x$};
+  \node[dcnsbox, below left=0.75cm and -0.6cm of feat]  (offset) {offset conv \\ \footnotesize$\to 2N$ offset maps};
+  \node[dcnbox,  below right=0.75cm and -0.6cm of feat] (main)   {deformable conv};
+  \node[dcnbox,  below=1.6cm of feat] (out)    {output feature map $y$};
+
+  \draw[->, thick, LectureBlue] (feat)   -- (offset);
+  \draw[->, thick, LectureBlue] (feat)   -- (main);
+  \draw[->, thick, LectureTeal, dashed]
+        (offset) -- node[below left, font=\tiny] {$\{\Delta p_n\}$} (main);
+  \draw[->, thick, LectureBlue] (main)   -- (out);
+\end{tikzpicture}
+\end{columns}
+\vfill
+{\tiny J. Dai et al., \textit{Deformable Convolutional Networks}, ICCV 2017.}
 \end{frame}
 
-\begin{frame}{Medical Image Registration [cite: 208]}
-    \textbf{Learnable Elastic Warps} [cite: 209]\\
-    In medical imaging, we often need to align a Source image to a Target (e.g., pre-op vs. post-op). [cite: 210]
-    
-    \vspace{0.5em}
-    \begin{itemize}
-        \item Classical methods (Demons, B-Splines) are slow optimization loops. [cite: 211]
-        \item Deep models (VoxelMorph) learn a global function that predicts the displacement field in milliseconds, treating registration as a feed-forward inference task. [cite: 212]
-    \end{itemize}
-    \vspace{1em}
-    \textit{PhD Note: The grid sampler here acts as a physical constraint-the image cannot "break" if the warp is diffeomorphic.} [cite: 213]
+\begin{frame}{DCN: Gradient Flow Through Bilinear Interpolation}
+\small
+Because the bilinear sampler is differentiable w.r.t.\ the offset $\Delta p_n$, the entire stack can be trained end-to-end:
+\[
+\frac{\partial y(p_0)}{\partial \Delta p_n}
+  = \sum_{p_n \in R} w(p_n) \cdot
+    \frac{\partial\, x\!\left(p_0 + p_n + \Delta p_n\right)}{\partial \Delta p_n}
+\]
+where, \[
+x(p_f) = \sum_{q \in \mathbb{Z}^2}
+          G(q, p_f)\, x(q)
+\]
+The bilinear kernel at fractional position $p_f = (x_f, y_f)$ is:
+\[
+G(q,p) = \max\!\left(0,1-|q_x-p_x|\right)\cdot
+          \max\!\left(0,1-|q_y-p_y|\right)
+\]
+\begin{itemize}
+  \item $\partial G / \partial p_x$ is piecewise constant and non-zero wherever $|q_x - p_x| < 1$.
+  \item Gradients w.r.t.\ $\Delta p_n$ thus reach the offset branch during backpropagation.
+\end{itemize}
+\begin{alertblock}{Key insight}
+The network learns \emph{where} to sample purely by minimizing the task loss — no explicit geometric supervision is required.
+\end{alertblock}
+\vfill
+{\tiny J. Dai et al., \textit{Deformable Convolutional Networks}, ICCV 2017.}
 \end{frame}
 
+\begin{frame}{DCNv2: Modulated Deformable Convolutions (Zhu et al., 2019)}
+\begin{columns}[T,onlytextwidth]
+\column{0.55\textwidth}
+\small
+\textbf{Motivation:} DCNv1 adapts \emph{where} to sample but treats all sampled values equally.
+DCNv2 adds a per-position modulation scalar $\Delta m_n \in [0,1]$ predicted alongside the offsets:
+\[
+y(p_0) = \sum_{p_n \in R} w(p_n)\cdot \Delta m_n \cdot x\!\left(p_0+p_n+\Delta p_n\right)
+\]
+\begin{itemize}
+  \item $\Delta m_n$ is produced by a sigmoid activation in the offset branch.
+  \item Background or occluded positions can be suppressed to near zero.
+  \item Combines \textbf{spatial adaptation} (offsets) with \textbf{amplitude adaptation} (modulation).
+\end{itemize}
+
+\column{0.42\textwidth}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries\small}p{0.3\linewidth} >{\raggedright\arraybackslash\small}X}
+\toprule
+Version & Contribution per position \\
+\midrule
+Standard    & $w(p_n)\cdot x(p_0{+}p_n)$ \\[2pt]
+DCNv1       & $w(p_n)\cdot x(p_0{+}p_n{+}\Delta p_n)$ \\[2pt]
+DCNv2       & $w(p_n)\cdot \Delta m_n \cdot x(p_0{+}p_n{+}\Delta p_n)$ \\
+\bottomrule
+\end{tabularx}
+\vspace{0.6em}
+\begin{block}{}
+Modulation turns each kernel position into a \textbf{soft switch} that can suppress irrelevant context.
+\end{block}
+\end{columns}
+\vfill
+{\tiny X. Zhu et al., \textit{Deformable ConvNets V2: More Deformable, Better Results}, CVPR 2019.}
+\end{frame}
 
 \begin{frame}{Suggested Reading}
 \small
@@ -1052,10 +1107,7 @@ Neural networks can learn where to sample, but they still inherit the mathematic
 \item J. A. Fessler, \emph{Fundamentals of Image Reconstruction}, for a stronger operator viewpoint.
 \end{itemize}
 
-\vspace{1em}
-\begin{block}{Final discussion prompt}
-If a model input must be resized from $512 \times 512$ to $224 \times 224$, which information is lost, which information can be partially approximated by a model, and which scientific claims become harder to justify afterward?
-\end{block}
+
 \end{frame}
 
 \end{document}
