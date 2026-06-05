@@ -179,54 +179,60 @@ Piecewise linear functions can selectively stretch or compress contrast in speci
 \end{frame}
 
 \begin{frame}{Histogram Processing}
-\begin{columns}[T,onlytextwidth]
-\column{0.58\textwidth}
 \begin{itemize}
 \item An image histogram is a graphical representation of the frequency distribution of pixel intensity values.
 \item For a digital image with gray levels in the range $[0, L-1]$, the histogram is a discrete function:
+
+
 \[
 h(r_k) = n_k
 \]
+
+
 where $r_k$ is the $k$-th gray level and $n_k$ is the number of pixels in the image having gray level $r_k$.
 \item Normalizing the histogram yields the probability of occurrence of gray level $r_k$:
+
+
 \[
 p(r_k) = \frac{n_k}{MN}
 \]
+
+
 where $M \times N$ is the image dimension.
 \end{itemize}
-
-\column{0.38\textwidth}
-\centering
-\includegraphics[width=\linewidth]{ex_hist.png}
-\par\vspace{0.3em}\tiny{Grayscale Histogram Viz}
-\end{columns}
 \end{frame}
 
-\begin{frame}{Histogram Equalization (HE)}
-\begin{columns}[T,onlytextwidth]
-\column{0.55\textwidth}
+\begin{frame}{Histogram Processing}
+\centering
+\includegraphics[width=0.95\linewidth]{ex_hist.png}
+\par\vspace{0.3em}\tiny{Grayscale Histogram Viz}
+\end{frame}
+
+
+
+\begin{frame}{Histogram Equalization (HE) - Concept}
 \begin{itemize}
 \item Histogram Equalization automatically maps intensity levels to achieve a uniform distribution, maximizing global contrast.
 \item The transformation function is the Cumulative Distribution Function (CDF):
+
+
 \[
 s_k = T(r_k) = (L-1) \sum_{j=0}^{k} p(r_j) = \frac{L-1}{MN} \sum_{j=0}^{k} n_j
 \]
+
+
 where $\sum p(r_j) = 1$.
 \item This mapping is guaranteed to be monotonic, preserving the intensity order.
 \end{itemize}
+\end{frame}
 
-\column{0.40\textwidth}
+\begin{frame}{Histogram Equalization (HE) - Visualization}
 \centering
 \includegraphics[width=0.9\linewidth]{hist_eq.png}
 \par\vspace{0.3em}\tiny{Global Histogram Equalization Transfer}
-\end{columns}
 \end{frame}
 
 \begin{frame}{Comparison: Global HE vs. CLAHE}
-In practice, global contrast enhancement can be problematic. Compare standard HE and CLAHE:
-\vspace{0.5em}
-\begin{columns}[c,onlytextwidth]
-\column{0.62\textwidth}
 \small
 \begin{tabularx}{\linewidth}{>{\bfseries}p{0.22\linewidth} X}
 \toprule
@@ -238,12 +244,20 @@ CLAHE & Divides the image into small local tiles (e.g. $8 \times 8$). Limits con
 \bottomrule
 \end{tabularx}
 
-\column{0.35\textwidth}
-\centering
-\includegraphics[width=\linewidth]{ex_hist_eq.png}
-\par\vspace{0.3em}\tiny{Comparison of HE and CLAHE}
-\end{columns}
+\vspace{1em}
+\small
+\textbf{CLAHE Explanation:} Contrast Limited Adaptive Histogram Equalization enhances local contrast by working on small regions instead of the whole image. By limiting the amplification of contrast, it reduces noise and preserves fine details, making it especially useful for medical and low-light images.
 \end{frame}
+
+
+
+\begin{frame}{Comparison: Global HE vs. CLAHE}
+\centering
+\includegraphics[width=1\linewidth]{ex_hist_eq.png}
+\par\vspace{0.3em}\tiny{Comparison of HE and CLAHE}
+\end{frame}
+
+
 
 % ==================== SECTION 2 ====================
 \section{Spatial Filtering}
@@ -300,7 +314,6 @@ Convolution is mathematically associative and commutative, whereas cross-correla
 \end{block}
 \end{columns}
 \end{frame}
-
 \begin{frame}{Linear Lowpass Filtering (Smoothing)}
 Smoothing filters attenuate high-frequency transitions (noise, sharp edges) to blur details.
 \vspace{0.8em}
@@ -308,23 +321,34 @@ Smoothing filters attenuate high-frequency transitions (noise, sharp edges) to b
 \column{0.48\textwidth}
 \begin{block}{Moving Average (Box) Filter}
 Replaces each pixel with the average of its neighbors in a window. A $3 \times 3$ box filter is:
+
+
 \[
 K_{box} = \frac{1}{9} \begin{bmatrix} 1 & 1 & 1 \\ 1 & 1 & 1 \\ 1 & 1 & 1 \end{bmatrix}
 \]
+
+
 \end{block}
-\centering
-\includegraphics[width=0.7\linewidth]{filter_mv.png}
 
 \column{0.48\textwidth}
 \begin{block}{Gaussian Filter}
 Uses weights that decrease exponentially with distance from the center, preserving edges better:
+
+
 \[
 K_{gauss} = \frac{1}{16} \begin{bmatrix} 1 & 2 & 1 \\ 2 & 4 & 2 \\ 1 & 2 & 1 \end{bmatrix}
 \]
+
+
 \end{block}
-\centering
-\includegraphics[width=0.7\linewidth]{filter_gaussian.png}
 \end{columns}
+\end{frame}
+
+\begin{frame}{Linear Lowpass Filtering (Examples)}
+\centering
+\includegraphics[width=0.9\linewidth]{filter_mv.png}
+\vspace{1em}
+\includegraphics[width=0.9\linewidth]{filter_gaussian.png}
 \end{frame}
 
 \begin{frame}{Non-linear Lowpass Filtering (Smoothing)}
@@ -351,39 +375,57 @@ A hybrid between mean and median filters:
 Excellent for noise models containing both Gaussian and impulse noise.
 \end{block}
 \end{columns}
-\vspace{0.5em}
-\centering
-\includegraphics[height=0.22\textheight]{filter_nonlinear.png}
 \end{frame}
+
+\begin{frame}{Non-linear Lowpass Filtering (Smoothing)}
+\centering
+\includegraphics[width=1\linewidth]{filter_nonlinear.png}
+\end{frame}
+
+
 
 \begin{frame}{Linear Highpass Filtering: The Laplacian Operator}
 Highpass filters amplify high-frequency changes, useful for edge detection and sharpening.
 \vspace{0.8em}
-\begin{columns}[T,onlytextwidth]
-\column{0.55\textwidth}
+
 \begin{itemize}
 \item The \textbf{Laplacian} ($\nabla^2$) is a second-order derivative operator:
+
+
 \[
 \nabla^2 f = \frac{\partial^2 f}{\partial x^2} + \frac{\partial^2 f}{\partial y^2}
 \]
+
+
 \item Discrete finite-difference approximation:
 \begin{align*}
 \nabla^2 f(x, y) \approx & f(x+1, y) + f(x-1, y) \\
 & + f(x, y+1) + f(x, y-1) - 4f(x, y)
 \end{align*}
 \item This corresponds to the convolution kernel:
-\[
-K_{\nabla^2} = \begin{bmatrix} 0 & 1 & 0 \\ 1 & -4 & 1 \\ 0 & 1 & 0 \end{bmatrix} \text{ or } \begin{bmatrix} 1 & 1 & 1 \\ 1 & -8 & 1 \\ 1 & 1 & 1 \end{bmatrix}
-\]
-\end{itemize}
 
-\column{0.40\textwidth}
-\centering
-\includegraphics[width=0.7\linewidth]{highpass.png}
-\par\vspace{0.2em}
-\includegraphics[width=0.7\linewidth]{laplacian.png}
-\end{columns}
+
+\[
+K_{\nabla^2} = \begin{bmatrix} 0 & 1 & 0 \\ 1 & -4 & 1 \\ 0 & 1 & 0 \end{bmatrix} 
+\quad \text{or} \quad
+\begin{bmatrix} 1 & 1 & 1 \\ 1 & -8 & 1 \\ 1 & 1 & 1 \end{bmatrix}
+\]
+
+
+\end{itemize}
 \end{frame}
+
+\begin{frame}{The Laplacian Operator: Visuals}
+\centering
+\includegraphics[width=0.55\linewidth]{highpass.png}
+\end{frame}
+
+\begin{frame}{The Laplacian Operator: Visuals}
+\centering
+\includegraphics[width=1\linewidth]{laplacian.png}
+\end{frame}
+
+
 
 \begin{frame}{Laplacian Applications in Signal Processing}
 \begin{columns}[c,onlytextwidth]
@@ -425,9 +467,13 @@ K_x = \begin{bmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{bmatrix}, \qua
 \column{0.40\textwidth}
 \centering
 \includegraphics[width=0.8\linewidth]{sobel.png}
-\par\vspace{0.5em}
-\includegraphics[width=0.8\linewidth]{ex_sobel2.png}
+
 \end{columns}
+\end{frame}
+
+\begin{frame}{The Sobel Operator: Visuals}
+\centering
+\includegraphics[width=1\linewidth]{ex_sobel2.png}
 \end{frame}
 
 % ==================== SECTION 3 ====================
@@ -509,6 +555,8 @@ Undersampling causes replicas of the spectrum to overlap in the frequency domain
 
 \begin{frame}{Amplitude vs. Phase in Image Spectrum}
 The Fourier transform result $F(u,v)$ is complex-valued: $F(u,v) = |F(u,v)|e^{j\phi(u,v)}$.
+
+Animation: \href{https://www.youtube.com/watch?v=MA2y_2YySq0}{\textcolor{red}{Animation click here}}
 \vspace{0.8em}
 \begin{columns}[T,onlytextwidth]
 \column{0.48\textwidth}
@@ -560,6 +608,22 @@ Attenuates specific frequency spikes. Highly effective at removing periodic stri
 \end{columns}
 \end{frame}
 
+
+\begin{frame}{Lowpass Filtering: Visuals}
+\centering
+\includegraphics[width=0.9\linewidth]{freq_lowpass.png}
+\end{frame}
+
+\begin{frame}{Highpass Filtering: Visuals}
+\centering
+\includegraphics[width=0.8\linewidth]{freq_highpass.png}
+\end{frame}
+
+\begin{frame}{Notch Filtering: Visuals}
+\centering
+\includegraphics[width=1\linewidth]{freq_notch.png}
+\end{frame}
+
 \begin{frame}{Computed Tomography (CT) and the Radon Transform}
 \begin{columns}[T,onlytextwidth]
 \column{0.55\textwidth}
@@ -572,7 +636,7 @@ R(x', \theta) = \iint f(x,y) \delta\Big[x'-(x\sin\theta - y\cos\theta)\Big] dxdy
 \item \textbf{Fourier Slice Theorem}: The 1D Fourier transform of a projection at angle $\theta$ is equal to a 2D radial slice of the 2D Fourier transform of the object $f(x,y)$ at the same angle.
 \item Used in Filtered Backprojection (FBP) for CT image reconstruction.
 \end{itemize}
-
+Animation: \href{https://www.youtube.com/watch?v=MA2y_2YySq0&t=8s}{\textcolor{red}{Radon transform animation click here}}
 \column{0.40\textwidth}
 \centering
 \begin{tikzpicture}[scale=0.8,>=Latex]
@@ -585,7 +649,20 @@ R(x', \theta) = \iint f(x,y) \delta\Big[x'-(x\sin\theta - y\cos\theta)\Big] dxdy
 \draw (0.3,0) arc (0:51:0.3);
 \node at (0.5,0.2) {$\theta$};
 \end{tikzpicture}
+
 \end{columns}
+
+
+\end{frame}
+
+\begin{frame}{Radon Transform: Visuals}
+\centering
+\includegraphics[width=1\linewidth]{freq_radon.png}
+\end{frame}
+
+\begin{frame}{Radon Transform: Visuals}
+\centering
+\includegraphics[width=1\linewidth]{freq_radon_flow.png}
 \end{frame}
 
 % ==================== SECTION 4 ====================
