@@ -61,6 +61,7 @@
     \item \textbf{Feature-based Registration}: Keypoint detectors (Harris, SIFT, ORB), descriptors, matching strategies, and robust optimization (RANSAC).
     \item \textbf{Intensity-based Registration}: Spatial transformations, interpolation methods, similarity metrics (SSD, CC, Mutual Information), and ITK optimization frameworks.
     \item \textbf{Practical Guidelines}: How to select and execute the right registration pipeline.
+    \item \textbf{Deep Learning Approaches}: Supervised vs. unsupervised models (VoxelMorph), and contrast-invariant registration with SynthMorph.
 \end{itemize}
 \end{frame}
 
@@ -494,13 +495,16 @@ If the initial match set contains more than 50\% outliers, gradient-based method
 \vfill
 \begin{block}{RANSAC Algorithm Steps}
 \begin{enumerate}
-    \item \textbf{Hypothesize}: Select a random minimal subset of matches (e.g., 4 matches for homography, 3 for affine) needed to estimate parameters $\mathbf{p}$.
-    \item \textbf{Model Estimation}: Compute the candidate transformation $f(\mathbf{x};\mathbf{p})$ from the subset.
-    \item \textbf{Consensus}: Transform all other points in the dataset. Count how many point matches fall within a tolerance distance $\epsilon$ (these are the \textbf{inliers}).
-    \item \textbf{Iterate}: Repeat steps 1--3 for $N$ iterations.
-    \item \textbf{Refinement}: Keep the model parameters $\mathbf{p}^*$ that produced the maximum number of inliers, and re-estimate the final transform using OLS on all identified inliers.
+    \item Select a random minimal subset of matches needed to estimate parameters $\mathbf{p}$.
+    \item Compute the candidate transformation $f(\mathbf{x};\mathbf{p})$ from the subset.
+    \item Transform all other points in the dataset. Count how many point matches fall within a tolerance distance $\epsilon$ (these are the \textbf{inliers}).
+    \item Repeat steps 1--3 for $N$ iterations.
+    \item Keep the model parameters $\mathbf{p}^*$ that produced the maximum number of inliers, and re-estimate the final transform using OLS on all identified inliers.
 \end{enumerate}
 \end{block}
+\begin{center}
+\textcolor{red}{\href{https://www.youtube.com/watch?v=EkYXjmiolBg}{Animations}}
+\end{center}
 \end{frame}
 
 % ==========================================
@@ -516,6 +520,12 @@ If the initial match set contains more than 50\% outliers, gradient-based method
 \begin{frame}
     \centering
     \includegraphics[width=0.8\textwidth]{features_vs_intensity.png}
+\end{frame}
+
+\begin{frame}
+    \centering
+    \includegraphics[width=1\textwidth]{intensity_regis.png}
+    \textcolor{red}{\href{https://onlinelibrary.wiley.com/doi/full/10.1002/jmrs.417}{https://onlinelibrary.wiley.com/doi/full/10.1002/jmrs.417}}
 \end{frame}
 
 \begin{frame}{Similarity Metrics: SSD and CC}
@@ -560,6 +570,136 @@ For multimodal registration (e.g., aligning CT to MRI), intensity relationships 
 Maximizing $I(X;Y)$ means aligning images so that their joint intensity histogram becomes as sharp (clustered) as possible, representing a strong statistical relationship.
 \end{frame}
 
+\begin{frame}{Similarity Metrics: Mutual Information (MI)}
+    \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{MI.png}
+    \end{figure}
+    \footnotesize
+    \textcolor{red}{\href{https://www.tandfonline.com/doi/full/10.1080/27684830.2025.2494917}{https://www.tandfonline.com/doi/full/10.1080/27684830.2025.2494917}}
+\end{frame}
+
+
+\begin{frame}{MI Calculation Example: 2$\times$2 Checkerboard}
+\begin{columns}[T,onlytextwidth]
+\column{0.45\textwidth}
+\centering
+\textbf{Inverted Checkerboards}
+\vspace{0.3em}
+
+\begin{tikzpicture}[scale=0.75]
+  \draw[fill=black!80] (0,1) rectangle (1,2) node[pos=.5, white] {\textbf{0}};
+  \draw[fill=white] (1,1) rectangle (2,2) node[pos=.5, black] {\textbf{1}};
+  \draw[fill=white] (0,0) rectangle (1,1) node[pos=.5, black] {\textbf{1}};
+  \draw[fill=black!80] (1,0) rectangle (2,1) node[pos=.5, white] {\textbf{0}};
+  \node[below] at (1,0) {Image $X$ (Fixed)};
+\end{tikzpicture}
+\hspace{0.5cm}
+\begin{tikzpicture}[scale=0.75]
+  \draw[fill=white] (0,1) rectangle (1,2) node[pos=.5, black] {\textbf{1}};
+  \draw[fill=black!80] (1,1) rectangle (2,2) node[pos=.5, white] {\textbf{0}};
+  \draw[fill=black!80] (0,0) rectangle (1,1) node[pos=.5, white] {\textbf{0}};
+  \draw[fill=white] (1,0) rectangle (2,1) node[pos=.5, black] {\textbf{1}};
+  \node[below] at (1,0) {Image $Y$ (Moving)};
+\end{tikzpicture}
+
+\vspace{0.8em}
+\textbf{Joint Probability $p(x,y)$}
+\vspace{0.3em}
+
+\small
+\begin{tabular}{c|cc}
+$X \setminus Y$ & $0$ & $1$ \\ \hline
+$0$ & $0$ & $0.5$ \\
+$1$ & $0.5$ & $0$
+\end{tabular}
+
+\column{0.51\textwidth}
+\small
+\textbf{Step 1: Marginal Entropies}
+\begin{itemize}
+    \item $p_X = \{0.5, 0.5\} \implies H(X) = 1.0\text{ bit}$
+    \item $p_Y = \{0.5, 0.5\} \implies H(Y) = 1.0\text{ bit}$
+\end{itemize}
+
+\textbf{Step 2: Joint Entropy}
+\begin{itemize}
+    \item Non-zero joint states: $(0,1)$ and $(1,0)$, both with probability $0.5$.
+    \item $H(X, Y) = -2 \times (0.5 \log_2 0.5) = 1.0\text{ bit}$
+\end{itemize}
+
+\textbf{Step 3: Mutual Information}
+\begin{align*}
+I(X; Y) &= H(X) + H(Y) - H(X, Y) \\
+&= 1.0 + 1.0 - 1.0 = 1.0\text{ bit}
+\end{align*}
+\end{columns}
+\vspace{0.3em}
+\begin{block}{Key Insight}
+Even though the colors are inverted (which gives bad SSD/CC), they share maximum MI ($1.0\text{ bit}$) because their relationship is perfectly deterministic.
+\end{block}
+\end{frame}
+
+\begin{frame}{MI Calculation Example: Checkerboard vs. Flat Image}
+\begin{columns}[T,onlytextwidth]
+\column{0.45\textwidth}
+\centering
+\textbf{Checkerboard vs. Flat Image}
+\vspace{0.3em}
+
+\begin{tikzpicture}[scale=0.75]
+  \draw[fill=black!80] (0,1) rectangle (1,2) node[pos=.5, white] {\textbf{0}};
+  \draw[fill=white] (1,1) rectangle (2,2) node[pos=.5, black] {\textbf{1}};
+  \draw[fill=white] (0,0) rectangle (1,1) node[pos=.5, black] {\textbf{1}};
+  \draw[fill=black!80] (1,0) rectangle (2,1) node[pos=.5, white] {\textbf{0}};
+  \node[below] at (1,0) {Image $X$ (Fixed)};
+\end{tikzpicture}
+\hspace{0.5cm}
+\begin{tikzpicture}[scale=0.75]
+  \draw[fill=white] (0,1) rectangle (1,2) node[pos=.5, black] {\textbf{1}};
+  \draw[fill=white] (1,1) rectangle (2,2) node[pos=.5, black] {\textbf{1}};
+  \draw[fill=white] (0,0) rectangle (1,1) node[pos=.5, black] {\textbf{1}};
+  \draw[fill=white] (1,0) rectangle (2,1) node[pos=.5, black] {\textbf{1}};
+  \node[below] at (1,0) {Image $Y$ (Moving)};
+\end{tikzpicture}
+
+\vspace{0.8em}
+\textbf{Joint Probability $p(x,y)$}
+\vspace{0.3em}
+
+\small
+\begin{tabular}{c|cc}
+$X \setminus Y$ & $0$ & $1$ \\ \hline
+$0$ & $0$ & $0.5$ \\
+$1$ & $0$ & $0.5$
+\end{tabular}
+
+\column{0.51\textwidth}
+\small
+\textbf{Step 1: Marginal Entropies}
+\begin{itemize}
+    \item $p_X = \{0.5, 0.5\} \implies H(X) = 1.0\text{ bit}$
+    \item $p_Y = \{0.0, 1.0\} \implies H(Y) = 0.0\text{ bits}$
+\end{itemize}
+
+\textbf{Step 2: Joint Entropy}
+\begin{itemize}
+    \item Non-zero joint states: $(0,1)$ and $(1,1)$, both with probability $0.5$.
+    \item $H(X, Y) = -2 \times (0.5 \log_2 0.5) = 1.0\text{ bit}$
+\end{itemize}
+
+\textbf{Step 3: Mutual Information}
+\begin{align*}
+I(X; Y) &= H(X) + H(Y) - H(X, Y) \\
+&= 1.0 + 0.0 - 1.0 = 0.0\text{ bits}
+\end{align*}
+\end{columns}
+\vspace{0.3em}
+\begin{block}{Key Insight}
+A flat, uniform image contains no information ($H(Y) = 0$). Knowing $Y$ gives zero reduction in uncertainty about $X$. Hence, the Mutual Information is $0.0$, making registration impossible.
+\end{block}
+\end{frame}
+
 \begin{frame}{Spatial Transformation Models}
 \small
 \begin{tabularx}{\textwidth}{l c >{\raggedright\arraybackslash}l X}
@@ -594,7 +734,7 @@ Compositions of affine transformations correspond to direct matrix multiplicatio
 \textbf{Common Kernels}:
 \begin{itemize}
     \item \textbf{Nearest Neighbor}: Assigns value of closest grid pixel. Preserves discrete class labels. Discontinuous.
-    \item \textbf{Bilinear/Trilinear}: Linear combination of $2^D$ neighbors. Smooth, but acts as a low-pass blur filter.
+    \item \textbf{Bilinear}: Linear combination of $2^D$ neighbors. Smooth, but acts as a low-pass blur filter.
     \item \textbf{Bicubic/Spline}: Uses $4^D$ neighborhood. Continuous first derivatives. Better edge representation.
 \end{itemize}
 \column{0.41\textwidth}
@@ -613,9 +753,8 @@ Compositions of affine transformations correspond to direct matrix multiplicatio
 \end{frame}
 
 \begin{frame}{Optimizers and SimpleITK Framework}
-\begin{columns}[T,onlytextwidth]
-\column{0.55\textwidth}
-\small
+
+
 \textbf{Optimizers}:
 \begin{itemize}
     \item Simple similarity metrics (SSD) have smooth derivatives, allowing standard Gradient Descent.
@@ -626,10 +765,7 @@ Compositions of affine transformations correspond to direct matrix multiplicatio
 \begin{itemize}
     \item To avoid local minima, registration is often run in a coarse-to-fine pyramid (resolving major shifts first at low resolution).
 \end{itemize}
-\column{0.41\textwidth}
-\centering
-\includegraphics[width=\linewidth]{guideline.png}
-\end{columns}
+
 \end{frame}
 
 % ==========================================
@@ -643,28 +779,198 @@ Compositions of affine transformations correspond to direct matrix multiplicatio
 \end{frame}
 
 \begin{frame}{Practical Pipeline Selection Guide}
+
+    \centering
+    \includegraphics[width=0.7\textwidth]{guideline.png}
+
+
+\end{frame}
+
+\begin{frame}{Practical Pipeline Selection Guide}
+
+    \centering
+    \includegraphics[width=0.7\textwidth]{regis_guideline.png}
+
+
+\end{frame}
+
+% ==========================================
+% SECTION 6: DEEP LEARNING IN IMAGE REGISTRATION
+% ==========================================
+\section{Deep Learning in Image Registration}
+\begin{frame}
 \centering
-\begin{tikzpicture}[node distance=0.8cm, >=Latex, scale=0.85, every node/.style={transform shape}]
-    \tikzstyle{q}=[draw=LectureGold, thick, rounded corners, fill=LectureGold!5, minimum width=3.5cm, align=center, font=\scriptsize]
-    \tikzstyle{a}=[draw=LectureBlue, thick, fill=LectureBlue!5, minimum width=3.5cm, align=center, font=\scriptsize]
-    
-    \node[q] (q1) {Modality?};
-    \node[q, below left=0.8cm and 0.5cm of q1] (q2a) {Deformations?};
-    \node[q, below right=0.8cm and 0.5cm of q1] (q2b) {Voxel matching?};
-    
-    \node[a, below=0.6cm of q2a] (a1) {Deformable\\Registration};
-    \node[a, below=0.6cm of q2b] (a2) {Mutual Information\\Metric};
-    
-    \draw[->, thick, LectureTeal] (q1) -- node[above left] {Monomodal} (q2a);
-    \draw[->, thick, LectureTeal] (q1) -- node[above right] {Multimodal} (q2b);
-    \draw[->, thick, LectureTeal] (q2a) -- node[left] {Yes} (a1);
-    \draw[->, thick, LectureTeal] (q2b) -- node[right] {Yes} (a2);
-\end{tikzpicture}
-\vfill
+\vspace{0.25\textheight}
+{\Huge Section 6: Deep Learning in Image Registration}
+\end{frame}
+
+\begin{frame}{Deep Learning in Image Registration}
+
+    \centering
+    \includegraphics[width=\textwidth]{dl_overview.png}
+
+    \footnotesize
+    \textcolor{red}{Chen J, Liu Y, Wei S, Bian Z, Subramanian S, Carass A, Prince JL, Du Y. A survey on deep learning in medical image registration: New technologies, uncertainty, evaluation metrics, and beyond. Medical Image Analysis. 2025 Feb 1;100:103385.}
+
+\end{frame}
+
+\begin{frame}{Traditional vs. Deep Learning Registration}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\textbf{Traditional (Iterative) Methods}
 \begin{itemize}
-    \item \textbf{Use Feature-based} when: Initial alignments have large rotations/scale changes, or images contain easily detectable landmarks.
-    \item \textbf{Use Intensity-based} when: Subtle, global structural alignments are needed, or when no distinct keypoints can be extracted reliably.
+    \item Optimizes parameters $T$ for \textbf{each specific image pair} from scratch.
+    \item Uses gradient descent/Powell's optimizer at runtime.
+    \item \textbf{Speed}: Slow (seconds to minutes per volume).
+    \item \textbf{Pros}: Adapts well to arbitrary image pairs.
 \end{itemize}
+
+\column{0.48\textwidth}
+\textbf{Learning-Based Methods}
+\begin{itemize}
+    \item Trains a neural network (e.g., U-Net) on a large dataset of images.
+    \item Network learns to predict the displacement field $\phi$ in a single forward pass.
+    \item \textbf{Speed}: Extremely fast (milliseconds at runtime).
+    \item \textbf{Pros}: Enables real-world real-time registration.
+\end{itemize}
+\end{columns}
+
+\vspace{0.5em}
+\begin{block}{The Paradigm Shift}
+In deep learning registration, the optimization burden is shifted from \textbf{runtime evaluation} to the \textbf{offline training phase}.
+\end{block}
+\end{frame}
+
+
+\begin{frame}{Common Loss Functions in DL Registration}
+\small
+Unsupervised DL image registration optimizes a combined loss: $\mathcal{L} = \mathcal{L}_{\text{sim}}(I_F, I_M(\phi)) + \lambda \mathcal{L}_{\text{smooth}}(\phi)$.
+
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{Multimodal Similarity Losses ($\mathcal{L}_{\text{sim}}$)}
+Multimodal registration cannot use direct intensity metrics like MSE. Common solutions include:
+\begin{itemize}
+    \item \textbf{Differentiable Mutual Information (DMI)}: Uses Parzen window density estimation to construct a differentiable joint histogram.
+    \item \textbf{MIND (Modality Independent Neighborhood Descriptor)}: Computes self-similarity patches. Invariant to contrast differences; widely used for CT-MRI.
+
+\end{itemize}
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{Deformation Regularization ($\mathcal{L}_{\text{smooth}}$)}
+To ensure anatomically plausible and invertible displacement fields $\mathbf{u}(\mathbf{x}) = \phi(\mathbf{x}) - \mathbf{x}$:
+\begin{itemize}
+    \item \textbf{Diffusion/Bending Energy}: Penalizes spatial variations/gradients of the displacement:
+    \[
+    \mathcal{L}_{\text{diffusion}} = \sum_{\mathbf{x}} \|\nabla \mathbf{u}(\mathbf{x})\|_2^2
+    \]
+    \item \textbf{Jacobian Determinant Penalty}: Ensures topology preservation. Evaluates the local Jacobian matrix $J_{\phi}(\mathbf{x})$. A negative determinant $|J_{\phi}(\mathbf{x})| \le 0$ indicates local folding:
+    \[
+    \mathcal{L}_{\text{Jac}} = \sum_{\mathbf{x}} \max(0, -|J_{\phi}(\mathbf{x})|)
+    \]
+\end{itemize}
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Differentiable Mutual Information (DMI): The Challenge}
+In classical registration, Mutual Information (MI) is optimized iteratively. However, optimizing it in Deep Learning (DL) via backpropagation presents a fundamental challenge:
+\vfill
+\begin{block}{The 1D Histogram Discontinuity Problem}
+To compute the probability distribution $p(b)$ of intensity bin $b$ in image $I$, we count the voxels:
+\[
+p(b) = \frac{1}{|\Omega|} \sum_{\mathbf{x} \in \Omega} \mathbb{I}(I(\mathbf{x}) \in \text{Bin } b)
+\]
+where $\mathbb{I}(\cdot)$ is the binary indicator (step) function:
+\begin{itemize}
+    \item The derivative of the step function is \textbf{zero everywhere} (and undefined/infinite at boundaries).
+    \item Because $\frac{\partial p(b)}{\partial I(\mathbf{x})} = 0$ almost everywhere, gradients cannot flow back from the loss function to the image intensities $I(\mathbf{x})$ (and thus to the deformation network).
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Differentiable Histograms: Parzen Windowing}
+
+To make the histogram differentiable, we replace the discontinuous indicator function with a smooth, continuous kernel function $\psi(\cdot)$ (known as \textbf{Parzen Windowing} or \textbf{Kernel Density Estimation}).
+\vfill
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{1D Soft Binning}
+Each voxel's contribution is distributed smoothly to adjacent bins based on its distance to the bin centers:
+\[
+p(b; \phi) = \frac{1}{|\Omega|} \sum_{\mathbf{x} \in \Omega} \psi(I(T_\phi(\mathbf{x})) - b)
+\]
+\end{block}
+
+
+\column{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{parzel.png}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{SynthMorph: Contrast-Invariant Registration}
+
+\textbf{The Challenge}: DL models typically fail when applied to images with different contrasts, modalities, or noise profiles than those seen during training.
+\vfill
+\textbf{The SynthMorph Solution}:
+\begin{itemize}
+    \item Trains the network entirely on \textbf{synthetic images} generated from segmentation label maps.
+    \item Label maps are filled with random intensities, smoothed with random Gaussians, and deformed.
+    \item The model learns to align images based solely on \textbf{anatomy and shape}, completely ignoring contrast/modality styles.
+\end{itemize}
+\vfill
+
+\centering
+\textbf{More Information:}
+\vspace{0.3em}
+
+\footnotesize
+\textcolor{red}{\href{https://martinos.org/malte/synthmorph/}{https://martinos.org/malte/synthmorph/}}
+
+\end{frame}
+
+
+\begin{frame}{SynthMorph: Data}
+
+    \centering
+    \includegraphics[width=\textwidth]{synthmoph_data.png}
+
+    \footnotesize
+    \textcolor{red}{M. Hoffmann, B. Billot, D. N. Greve, J. E. Iglesias, B. Fischl and A. V. Dalca, "SynthMorph: Learning Contrast-Invariant Registration Without Acquired Images," in IEEE Transactions on Medical Imaging, vol. 41, no. 3, pp. 543-558, March 2022, doi: 10.1109/TMI.2021.3116879.}
+
+\end{frame}
+
+\begin{frame}{SynthMorph Training: Dice Loss}
+
+Rather than evaluating similarity on image intensities, SynthMorph uses the segmentations $S_F$ and $S_M$ corresponding to the synthetic images to compute a shape-based similarity loss.
+
+\begin{block}{Soft Dice Loss}
+For a set of $C$ anatomical labels, the loss maximizes label overlap under the predicted deformation $\phi$:
+\[
+\mathcal{L}_{\text{Dice}}(S_F, S_M(\phi)) = 1 - \frac{1}{C} \sum_{c=1}^{C} \frac{2 \sum_{\mathbf{x}} S_F^c(\mathbf{x}) \cdot S_M^c(\phi(\mathbf{x}))}{\sum_{\mathbf{x}} S_F^c(\mathbf{x}) + \sum_{\mathbf{x}} S_M^c(\phi(\mathbf{x}))}
+\]
+where $S_F^c(\mathbf{x}) \in \{0, 1\}$ and $S_M^c(\mathbf{x}) \in [0, 1]$ are binary indicators of class label $c$ at position $\mathbf{x}$.
+\end{block}
+
+\begin{block}{Why Dice Loss Ensures Contrast Invariance}
+\begin{itemize}
+    \item The loss function does not look at the intensities of $I_F$ or $I_M$ during optimization; it only penalizes misalignment of the geometric boundaries ($S_F$ and $S_M$).
+    \item The network is forced to learn general shape representations, meaning it behaves consistently regardless of the image contrast or modality (MRI, CT, T1, T2) of the input images at test time.
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{SynthMorph: Architecture}
+
+    \centering
+    \includegraphics[width=\textwidth]{synthmorph_arch.png}
+
+    \footnotesize
+    \textcolor{red}{M. Hoffmann, B. Billot, D. N. Greve, J. E. Iglesias, B. Fischl and A. V. Dalca, "SynthMorph: Learning Contrast-Invariant Registration Without Acquired Images," in IEEE Transactions on Medical Imaging, vol. 41, no. 3, pp. 543-558, March 2022, doi: 10.1109/TMI.2021.3116879.}
+
 \end{frame}
 
 \begin{frame}{Key Takeaways}
@@ -674,6 +980,7 @@ Compositions of affine transformations correspond to direct matrix multiplicatio
     \item \textbf{Intensity-based Methods} solve for $T$ by optimizing global similarity metrics (SSD, Cross-Correlation, Mutual Information).
     \item \textbf{Mutual Information} is the gold standard for multimodal registration as it measures statistical correlation rather than direct intensity values.
     \item \textbf{Interpolation} is a critical computational step needed for coordinate mapping during image warping.
+    \item \textbf{Deep Learning Registration} shifts optimization from runtime to training, enabling millisecond-level registration (e.g., \textbf{VoxelMorph}). Advanced frameworks like \textbf{SynthMorph} achieve contrast invariance and are integrated into major neuroimaging packages like FreeSurfer.
 \end{itemize}
 \end{frame}
 
