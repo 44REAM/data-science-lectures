@@ -459,22 +459,9 @@ Once a keypoint is localized (with a scale $\sigma$ and primary orientation $\th
 \footnotesize{\href{https://arxiv.org/abs/1604.08164}{https://arxiv.org/abs/1604.08164}}
 \end{frame}
 
-\begin{frame}{ORB: Oriented FAST and Rotated BRIEF}
-SIFT is highly accurate but computationally expensive and patented for a long time. \textbf{ORB} is a fast, open-source alternative combining:
-\begin{itemize}
-    \item \textbf{oFAST (Oriented FAST)}:
-    \begin{itemize}
-        \item Keypoint detector based on comparing the intensity of a center pixel to a circle of 16 surrounding pixels.
-        \item Computes the \textit{intensity centroid} of the local patch: $\mathbf{C} = \left(\frac{m_{10}}{m_{00}}, \frac{m_{01}}{m_{00}}\right)$, where $m_{pq} = \sum x^p y^q I(x,y)$ are moments.
-        \item The vector from keypoint center to centroid defines the dominant orientation: $\theta = \operatorname{atan2}(m_{01}, m_{10})$.
-    \end{itemize}
-    \item \textbf{rBRIEF (Rotated BRIEF)}:
-    \begin{itemize}
-        \item Extracts binary descriptors using pairwise intensity tests.
-        \item Pairs are rotated according to the keypoint's dominant orientation $\theta$.
-        \item The descriptor is a bitstring of 256 bits, matched extremely fast using the Hamming distance.
-    \end{itemize}
-\end{itemize}
+\begin{frame}
+    \centering
+    \includegraphics[width=0.8\textwidth]{features_vs_intensity.png}
 \end{frame}
 
 \begin{frame}{Feature Matching Strategies}
@@ -482,14 +469,7 @@ Given descriptor sets $\{d_i^F\}$ and $\{d_j^M\}$ for the fixed and moving image
 \begin{itemize}
     \item \textbf{Brute-Force Matcher}: Computes distance (L2 for SIFT, Hamming for ORB) between every descriptor in set 1 and all descriptors in set 2. Returns the closest descriptor.
     \item \textbf{FLANN-based Matcher}: Uses fast nearest neighbor search trees (e.g., randomized KD-trees), highly effective for large datasets.
-    \item \textbf{Lowe's Ratio Test}: Filtering ambiguous matches.
-    \begin{itemize}
-        \item A match is kept only if the ratio of the distance of the nearest neighbor ($d_1$) to that of the second-nearest neighbor ($d_2$) satisfies:
-        \[
-        \frac{d_1}{d_2} < \tau \quad (\text{typically } \tau \approx 0.75)
-        \]
-        This discards matches in repeated patterns where descriptors look similar.
-    \end{itemize}
+
 \end{itemize}
 \end{frame}
 
@@ -533,25 +513,9 @@ If the initial match set contains more than 50\% outliers, gradient-based method
 {\Huge Section 4: Intensity-based Registration}
 \end{frame}
 
-\begin{frame}{Intensity-based Optimization Loop}
-\centering
-\begin{tikzpicture}[>=Latex,
-    block/.style={draw=LectureBlue, rounded corners, thick, minimum width=2.5cm, minimum height=0.9cm, fill=LectureBlue!5, align=center}]
-    
-    \node[block] (metric) at (0,2) {Similarity Metric\\(Loss Function)};
-    \node[block] (opt) at (4.5,2) {Optimizer};
-    \node[block] (trans) at (4.5,0) {Transformation\\$T_\theta$};
-    \node[block] (warp) at (0,0) {Interpolation and\\Warping};
-    
-    \draw[->, thick, LectureTeal] (metric) -- node[above] {Metric Value} (opt);
-    \draw[->, thick, LectureTeal] (opt) -- node[right] {Update $\theta$} (trans);
-    \draw[->, thick, LectureTeal] (trans) -- node[above] {Apply transform} (warp);
-    \draw[->, thick, LectureTeal] (warp) -- node[left] {Resampled $I_M$} (metric);
-    
-    % Inputs
-    \draw[<-, thick, Slate] (metric.north west) -- ++(-1.0, 0.6) node[above, font=\scriptsize] {Fixed $I_F$};
-    \draw[<-, thick, Slate] (warp.south west) -- ++(-1.0, -0.6) node[below, font=\scriptsize] {Moving $I_M$};
-\end{tikzpicture}
+\begin{frame}
+    \centering
+    \includegraphics[width=0.8\textwidth]{features_vs_intensity.png}
 \end{frame}
 
 \begin{frame}{Similarity Metrics: SSD and CC}
