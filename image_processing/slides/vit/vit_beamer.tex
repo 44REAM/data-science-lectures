@@ -512,11 +512,8 @@ Ref: https://medium.com/@hassaanidrees7/vision-transformer-vs-cnn-a-comparison-o
 Ref: Xia Z, Pan X, Song S, Li LE, Huang G. Vision transformer with deformable attention. InProceedings of the IEEE/CVF conference on computer vision and pattern recognition 2022 (pp. 4794-4803).
 \end{frame}
 
-% Slide 16: Swin Transformer: Shifted Windows
+% Slide 16a: Swin Transformer Text
 \begin{frame}{Swin Transformer: Shifted Windows}
-\begin{columns}[T,onlytextwidth]
-\column{0.55\textwidth}
-The Swin (Shifted Window) Transformer (Liu et al., 2021) addresses the $\mathcal{O}(N^2)$ quadratic complexity limitation of global attention.
 \begin{itemize}
     \item \textbf{Window-based Attention}:
     \begin{itemize}
@@ -530,17 +527,23 @@ The Swin (Shifted Window) Transformer (Liu et al., 2021) addresses the $\mathcal
         \item This introduces connections between adjacent local windows from previous layers, enabling cross-window context.
     \end{itemize}
 \end{itemize}
+\vfill
+\begin{center}
+    \href{https://www.youtube.com/watch?v=tFYxJZBAbE8}{Animation}
+\end{center}
 
-\column{0.40\textwidth}
-\centering
-\includegraphics[width=\linewidth]{swin_compare.png}
-\end{columns}
+
 \end{frame}
 
-% Slide 17: Swin Transformer: Hierarchical Feature Maps
+\begin{frame}
+\centering
+\includegraphics[width=0.93\linewidth]{swin_windows.png}
+\vfill
+\footnotesize
+Ref: https://www.vizuaranewsletter.com/p/an-beginners-introduction-to-swin
+\end{frame}
+
 \begin{frame}{Swin Transformer: Hierarchical Feature Maps}
-\begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
 \begin{itemize}
     \item Unlike ViT which maintains a constant sequence length, Swin builds a hierarchical representation.
     \item \textbf{Patch Merging}:
@@ -554,17 +557,31 @@ The Swin (Shifted Window) Transformer (Liu et al., 2021) addresses the $\mathcal
         \item Essential for dense downstream vision tasks (object detection, segmentation) requiring multi-scale feature maps.
     \end{itemize}
 \end{itemize}
-
-\column{0.44\textwidth}
-\centering
-\includegraphics[width=\linewidth]{swin_arch.png}
-\end{columns}
 \end{frame}
 
-% Slide 18: Deformable Attention Transformer (DAT)
+% Slide 16b: Swin Transformer Image
+\begin{frame}{Swin Transformer: Visual Comparison}
+\centering
+\includegraphics[width=0.9\linewidth]{swin_compare.png}
+\end{frame}
+
+
+\begin{frame}{Swin Transformer: Hierarchical Feature Maps}
+\centering
+\includegraphics[width=\linewidth]{swin_arch.png}
+\end{frame}
+
+\begin{frame}
+\centering
+\includegraphics[height=0.95\textheight,keepaspectratio]{receptive_field.png}
+
+\footnotesize
+Ref: Xia Z, Pan X, Song S, Li LE, Huang G. Vision transformer with deformable attention. InProceedings of the IEEE/CVF conference on computer vision and pattern recognition 2022 (pp. 4794-4803).
+\end{frame}
+
+
+% Slide 18a: Deformable Attention Transformer (DAT) - Text
 \begin{frame}{Deformable Attention Transformer (DAT)}
-\begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
 \begin{itemize}
     \item Global attention is computationally redundant; local window attention is spatially rigid.
     \item \textbf{Deformable Attention} (Xia et al., 2022):
@@ -577,13 +594,44 @@ The Swin (Shifted Window) Transformer (Liu et al., 2021) addresses the $\mathcal
         \item Offset prediction network outputs displacements $\Delta p$ for each reference point based on queries.
         \item Keys and values are bilinearly sampled from offset coordinates.
     \end{itemize}
-    \item Typically adopted only in deeper stages of the backbone to save compute.
 \end{itemize}
+\end{frame}
 
-\column{0.44\textwidth}
+% Slide 18b: Deformable Attention Transformer (DAT) - Image
+\begin{frame}{Deformable Attention Transformer (DAT)}
+\centering
+\includegraphics[width=\linewidth]{DAT.png}
+\vfill
+\footnotesize
+Ref: Xia Z, Pan X, Song S, Li LE, Huang G. Vision transformer with deformable attention. InProceedings of the IEEE/CVF conference on computer vision and pattern recognition 2022 (pp. 4794-4803).
+\end{frame}
+
+
+% Slide 18b: Motivation: Deformable Convolutional Networks (DCN)
+\begin{frame}{Motivation: Deformable Convolutional Networks (DCN)}
+\textbf{Deformable Convolution} (Dai et al., 2017):
+\begin{itemize}
+    \item Augments sampling locations with learnable 2D offsets $\Delta p_n$.
+    \item Offsets are predicted dynamically from input feature maps.
+    \item Enables the receptive field to deform dynamically according to object shape.
+\end{itemize}
+\end{frame}
+
+% Slide 18c: DCN Grid Visualization
+\begin{frame}
+\centering
+\includegraphics[height=0.9\textheight,keepaspectratio]{deform_cnn.png}
+\vfill 
+\footnotesize
+Ref: Dai J, Qi H, Xiong Y, Li Y, Zhang G, Hu H, Wei Y. Deformable convolutional networks. InProceedings of the IEEE international conference on computer vision 2017 (pp. 764-773).
+\end{frame}
+
+\begin{frame}{Deformable Attention Transformer (DAT)}
 \centering
 \includegraphics[width=\linewidth]{dat_arch.png}
-\end{columns}
+\vfill
+\footnotesize
+Ref: Xia Z, Pan X, Song S, Li LE, Huang G. Vision transformer with deformable attention. InProceedings of the IEEE/CVF conference on computer vision and pattern recognition 2022 (pp. 4794-4803).
 \end{frame}
 
 % Slide 19: Section Divider - Section 5
