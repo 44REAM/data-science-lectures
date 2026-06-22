@@ -58,28 +58,13 @@
 \begin{frame}{Lecture Overview}
 \begin{itemize}
     \item \textbf{Section 1: From CNNs to Visual Attention}
-    \begin{itemize}
-        \item Inherent limitations of local convolutions and translation equivariance
-        \item The visual attention mechanism as a global paradigm shift
-    \end{itemize}
-    \item \textbf{Section 2: The Vision Transformer (ViT) Core Architecture}
-    \begin{itemize}
-        \item Image patching, linear projection, and the classification token
-        \item Positional encodings, Multi-Head Self-Attention, and Pre-LN blocks
-    \end{itemize}
-    \item \textbf{Section 3: Inductive Biases and Training Dynamics}
-    \begin{itemize}
-        \item Spatial assumptions in CNNs vs. ViTs; sample efficiency and pretraining
-    \end{itemize}
-    \item \textbf{Section 4: Advanced Visual Transformer Architectures}
-    \begin{itemize}
-        \item Swin Transformer (shifted local windows and hierarchies)
-        \item Deformable Attention Transformer (DAT) (content-adaptive sparse sampling)
-    \end{itemize}
-    \item \textbf{Section 5: Dense downstream Tasks \& Applications}
-    \begin{itemize}
-        \item Segmentation (TransUNet, Swin-Unet) and Object Detection (DETR)
-    \end{itemize}
+
+    \item \textbf{Section 2: Inductive Biases and Training Dynamics}
+
+    \item \textbf{Section 3: Advanced Visual Transformer Architectures}
+
+    \item \textbf{Section 4: Dense downstream Tasks \& Applications}
+
 \end{itemize}
 \end{frame}
 
@@ -99,7 +84,6 @@
     \item \textbf{Local Receptive Fields}: 
     \begin{itemize}
         \item Standard convolution layers only process pixels within a local neighborhood.
-        \item Contextual relationships are established slowly through hierarchical stacking of pooling/downsampling.
     \end{itemize}
     \item \textbf{Locality Bias}:
     \begin{itemize}
@@ -107,7 +91,7 @@
     \end{itemize}
     \item \textbf{Downstream Bottleneck}:
     \begin{itemize}
-        \item Modeling global interactions and long-range dependencies is challenging in early layers.
+        \item Modeling global interactions is challenging in early layers.
     \end{itemize}
 \end{itemize}
 
@@ -129,54 +113,59 @@
 % Slide 5: The Visual Attention Paradigm Shift
 \begin{frame}{The Visual Attention Paradigm Shift}
 \begin{columns}[T,onlytextwidth]
-\column{0.58\textwidth}
-\begin{quote}
-``The ability to dynamically highlight and use the salient parts of the information at hand... inspired by the human visual system.'' \\
---- Grace W. Lindsay, 2020
-\end{quote}
-\vspace{1.0em}
+\column{0.55\textwidth}
 \begin{itemize}
     \item \textbf{Global Receptive Field}: 
     \begin{itemize}
         \item Self-attention allows each token (patch) to directly interact with all other tokens from the first layer.
         \item Spatial distance does not constrain learning.
     \end{itemize}
-    \item \textbf{Content-Dependent Weighting}:
-    \begin{itemize}
-        \item Weights are dynamically computed based on the similarity between queries and keys, rather than fixed spatial filters.
-    \end{itemize}
+
 \end{itemize}
 
-\column{0.38\textwidth}
+\column{0.40\textwidth}
 \centering
-\begin{tikzpicture}[scale=0.9]
-    % Draw nodes
-    \node[draw, circle, fill=LectureBlue!20] (n1) at (0,1.5) {$x_1$};
-    \node[draw, circle, fill=LectureBlue!20] (n2) at (2,1.5) {$x_2$};
-    \node[draw, circle, fill=LectureBlue!20] (n3) at (0,0) {$x_3$};
-    \node[draw, circle, fill=LectureBlue!20] (n4) at (2,0) {$x_4$};
-    % Draw self-attention links
-    \draw[<->, thick, LectureTeal] (n1) -- (n2);
-    \draw[<->, thick, LectureTeal] (n1) -- (n3);
-    \draw[<->, thick, LectureTeal] (n1) -- (n4);
-    \draw[<->, thick, LectureTeal] (n2) -- (n3);
-    \draw[<->, thick, LectureTeal] (n2) -- (n4);
-    \draw[<->, thick, LectureTeal] (n3) -- (n4);
-    \node[font=\scriptsize, text=LectureBlue] at (1,-0.5) {All-to-all Global Context};
+\begin{tikzpicture}[scale=0.8]
+    % Draw an grid representing image pixels
+    \draw[gray!40, step=0.4] (0,0) grid (3.2,3.2);
+    
+    % Reference patch token (Query)
+    \fill[LectureTeal!20, opacity=0.8] (1.2,1.2) rectangle (1.6,1.6);
+    \draw[LectureTeal, thick] (1.2,1.2) rectangle (1.6,1.6);
+    
+    % Global attention connections (all-to-all interactions)
+    \foreach \rx/\ry/\cx/\cy in {
+        0.0/0.0/0.2/0.2,
+        0.0/2.4/0.2/2.6,
+        0.8/2.8/1.0/3.0,
+        2.4/2.4/2.6/2.6,
+        2.8/0.8/3.0/1.0,
+        2.0/0.0/2.2/0.2,
+        2.8/2.0/3.0/2.2,
+        0.4/1.2/0.6/1.4,
+        1.2/2.8/1.4/3.0,
+        2.0/1.6/2.2/1.8%
+    } {
+        \fill[LectureGold!25, opacity=0.6] (\rx,\ry) rectangle (\rx+0.4,\ry+0.4);
+        \draw[LectureGold!60, thin] (\rx,\ry) rectangle (\rx+0.4,\ry+0.4);
+        \draw[<->, >=stealth, LectureGold, opacity=0.8, line width=0.6pt] (1.4,1.4) -- (\cx,\cy);
+    }
+    
+    \node[LectureTeal, font=\scriptsize] at (1.4,1.8) {Query Token};
+    
+    % Draw receptive field arrows
+    \draw[->, thick, LectureBlue] (1.4,1.4) -- (3.6,1.4) node[right, font=\scriptsize, align=center] {Global\\Processing};
 \end{tikzpicture}
 \end{columns}
 \end{frame}
 
-% Slide 6: Section Divider - Section 2
-\section{The Vision Transformer (ViT) Core Architecture}
-\begin{frame}
+\begin{frame}{ViT Overview}
 \centering
-\vspace{0.25\textheight}
-{\Huge Section 2: The Vision Transformer (ViT) Core Architecture}
+\includegraphics[height=0.9\textheight,keepaspectratio]{overview.png}
 \end{frame}
 
 % Slide 7: Image Patching & Linear Projection
-\begin{frame}{Image Patching and Linear Projection}
+\begin{frame}{Embedded Patches: Image Patching and Linear Projection}
 \begin{columns}[T,onlytextwidth]
 \column{0.55\textwidth}
 The Vision Transformer (Dosovitskiy et al., 2021) models images as sequences of patches:
@@ -188,8 +177,7 @@ The Vision Transformer (Dosovitskiy et al., 2021) models images as sequences of 
     \[
     \mathbf{z}_p^i = \mathbf{x}_p^i \mathbf{E}, \quad \mathbf{E} \in \mathbb{R}^{(P^2 C) \times D}
     \]
-    \item \textbf{Complexity Avoidance}:
-    Self-attention over raw pixels $\mathcal{O}((HW)^2)$ is intractable. Patching reduces token count to $N$, ensuring computational feasibility.
+    where $\mathbf{z}_p^i \in \mathbb{R}^D$ is the resulting patch embedding (token representation) for patch $i$, and $\mathbf{E}$ is a learnable projection matrix.
 \end{itemize}
 
 \column{0.40\textwidth}
@@ -214,13 +202,12 @@ The Vision Transformer (Dosovitskiy et al., 2021) models images as sequences of 
 \end{frame}
 
 % Slide 8: Classification Token & Positional Encodings
-\begin{frame}{Classification Token and Positional Encodings}
+\begin{frame}{Embedded Patches: Classification Token and Positional Encodings}
 \begin{columns}[T,onlytextwidth]
 \column{0.55\textwidth}
 \begin{itemize}
     \item \textbf{Classification token (\texttt{[CLS]})}:
     \begin{itemize}
-        \item A learnable embedding $\mathbf{x}_{\text{class}} \in \mathbb{R}^D$ is prepended to the patch embeddings.
         \item Serving as the query to gather classification information across all other patch embeddings.
         \item The final state of the \texttt{[CLS]} token at the encoder output ($\mathbf{z}_L^0$) is mapped to the output classification head.
     \end{itemize}
@@ -254,6 +241,160 @@ The Vision Transformer (Dosovitskiy et al., 2021) models images as sequences of 
 \end{tikzpicture}
 \end{columns}
 \end{frame}
+
+
+\begin{frame}{Why Do Positional Encodings?}
+\begin{itemize}
+    \item ViTs use 2D positional encodings—either learnable or sinusoidal—to preserve patch location and spatial structure in images.
+\end{itemize}
+
+\begin{center}
+    \includegraphics[height=0.7\textheight,keepaspectratio]{pos_encode.png}
+\end{center}
+\end{frame}
+
+% Slide 8d: Example of Sinusoidal Positional Encoding
+\begin{frame}{Example: Sinusoidal Positional Encoding}
+For a given position $pos$ and model dimension $D$, the positional encoding vector is:
+
+
+
+\[
+PE_{pos} = \Big[
+\sin\!\left(\tfrac{pos}{10000^{0/D}}\right), \;
+\cos\!\left(\tfrac{pos}{10000^{0/D}}\right), \;
+\dots, \;
+\sin\!\left(\tfrac{pos}{10000^{(D-2)/D}}\right), \;
+\cos\!\left(\tfrac{pos}{10000^{(D-2)/D}}\right)
+\Big]
+\]
+
+
+
+\vspace{0.5em}
+\textbf{Example:} For $pos = 3$, $D = 768$:
+
+
+\[
+PE_{3} \in \mathbb{R}^{768} = [0.141, -0.990, \dots, 0.030, 0.9995, \dots]
+\]
+
+
+
+\end{frame}
+
+
+\begin{frame}{Positional Encoding Strategies in ViT}
+\begin{itemize}
+    \item \textbf{The Necessity of Position}:
+    Because self-attention is permutation-invariant, the model cannot distinguish the spatial order of patches without explicit positional cues.
+    \item \textbf{Evaluated Strategies (Dosovitskiy et al., 2021)}:
+    \begin{itemize}
+        \item \textbf{No Positional Encoding}: Treats the patches as a bag of tokens. Validation accuracy drops by $> 3\%$.
+        \item \textbf{1D Learnable Encodings}: Treats the patches as a flat sequence (1 to $N$). Default choice in ViT.
+        \item \textbf{2D Learnable Encodings}: Learns separate $X$ and $Y$ coordinate embeddings (dimension $D/2$ each), which are concatenated.
+        \item \textbf{Sinusoidal (Fixed)}: Uses predefined sine/cosine functions of different frequencies to encode coordinates.
+    \end{itemize}
+\end{itemize}
+\begin{block}{Key Finding}
+There is no significant performance gap between 1D, 2D, or sinusoidal positional encodings. The model is highly capable of learning 2D coordinates from scratch using simple 1D learnable parameters.
+\end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+        \Huge \textbf{When postional encoding is not needed?}
+    \end{center}
+    \vfill
+
+\end{frame}
+
+\begin{frame}{ViT Overview}
+\centering
+\includegraphics[height=0.9\textheight,keepaspectratio]{overview.png}
+\end{frame}
+
+% Slide 8e: Feature Normalization: Layer Normalization (LN)
+\begin{frame}{Norm: Layer Normalization (LN)}
+\begin{itemize}
+    \item \textbf{LN vs. BN}:
+    \begin{itemize}
+        \item \textbf{Batch Norm} normalizes each feature channel independently across the batch (batch dimension).
+        \item \textbf{Layer Norm} normalizes all feature channels for each token vector independently (feature dimension).
+    \end{itemize}
+    \item \textbf{Mathematical Definition}:
+    For a token representation vector $\mathbf{x} \in \mathbb{R}^D$:
+    \[
+    \text{LN}(\mathbf{x}) = \frac{\mathbf{x} - \mu}{\sqrt{\sigma^2 + \epsilon}} \odot \boldsymbol{\gamma} + \boldsymbol{\beta}
+    \]
+    where the mean $\mu$ and variance $\sigma^2$ are computed across the $D$ feature channels:
+    \[
+    \mu = \frac{1}{D} \sum_{i=1}^{D} x_i, \quad \sigma^2 = \frac{1}{D} \sum_{i=1}^{D} (x_i - \mu)^2
+    \]
+    $\boldsymbol{\gamma}, \boldsymbol{\beta} \in \mathbb{R}^D$ are learnable scaling and shifting parameters, and $\epsilon$ is a small constant for numerical stability.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Norm: Layer Normalization (LN)}
+\centering
+\includegraphics[height=0.9\textheight,keepaspectratio]{norm.png}
+
+\href{https://theaisummer.com/normalization/}{https://theaisummer.com/normalization/}
+\end{frame}
+
+% Slide 11: Transformer Encoder Block: Pre-LN Architecture
+\begin{frame}{Pre-LN vs. Post-LN Block Layout}
+\begin{columns}[T,onlytextwidth]
+\column{0.55\textwidth}
+ViT adopts the \textbf{Pre-Layer Normalization} (Pre-LN) block structure.
+\begin{itemize}
+    \item \textbf{Post-LN (Standard Transformer)}:
+    \newline {\small $\mathbf{x}'_l = \text{LN}(\mathbf{x}_{l-1} + \text{MHSA}(\mathbf{x}_{l-1}))$, \quad $\mathbf{x}_l = \text{LN}(\mathbf{x}'_l + \text{MLP}(\mathbf{x}'_l))$}
+    \item \textbf{Pre-LN (ViT Block)}:
+    \newline {\small $\mathbf{x}'_l = \mathbf{x}_{l-1} + \text{MHSA}(\text{LN}(\mathbf{x}_{l-1}))$, \quad $\mathbf{x}_l = \mathbf{x}'_l + \text{MLP}(\text{LN}(\mathbf{x}'_l))$}
+    \item \textbf{Advantage of Pre-LN}:
+    \begin{itemize}
+        \item Normalization on the residual branch prior to layer execution prevents vanishing/exploding gradients.
+        \item Removes the necessity of a learning rate warm-up stage.
+    \end{itemize}
+\end{itemize}
+
+\column{0.42\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.85, font=\scriptsize]
+    % Pre-LN Flowchart
+    \draw[thick, LectureBlue, rounded corners] (0,0) rectangle (2.5,0.7) node[midway] {$\mathbf{x}_{l-1}$};
+    \draw[->, thick, LectureTeal] (1.25,0.7) -- (1.25,1.2);
+    \draw[thick, LectureBlue, fill=SoftGray] (0,1.2) rectangle (2.5,1.8) node[midway] {Layer Norm (LN)};
+    \draw[->, thick, LectureTeal] (1.25,1.8) -- (1.25,2.3);
+    \draw[thick, LectureBlue, fill=SoftGray] (0,2.3) rectangle (2.5,2.9) node[midway] {MHSA};
+    \draw[->, thick, LectureTeal] (1.25,2.9) -- (1.25,3.4);
+    
+    % Sum node
+    \draw[thick, fill=LectureGold!25] (1.25,3.6) circle (0.2) node {$+$};
+    \draw[->, thick, LectureTeal] (1.25,3.8) -- (1.25,4.3) node[above] {$\mathbf{x}'_l$};
+    
+    % Residual line
+    \draw[thick, LectureGold, ->] (-0.3, 0.35) -- (-0.3, 3.6) -- (1.05,3.6);
+    \draw[thick, LectureGold] (0, 0.35) -- (-0.3, 0.35);
+    \node[font=\tiny, left, LectureGold] at (-0.3, 2.0) {Residual};
+\end{tikzpicture}
+\end{columns}
+\vfill
+\footnotesize
+Nguyen TQ, Salazar J. Transformers without tears: Improving the normalization of self-attention. InProceedings of the 16th international conference on spoken language translation 2019.
+\end{frame}
+
+\begin{frame}{Pre-LN vs. Post-LN}
+\centering
+\includegraphics[height=0.9\textheight,keepaspectratio]{norm_ln.png}
+\end{frame}
+
+\begin{frame}{ViT Overview}
+\centering
+\includegraphics[height=0.9\textheight,keepaspectratio]{overview.png}
+\end{frame}
+
 
 % Slide 9: Self-Attention Mechanism (Mathematical Details)
 \begin{frame}{Self-Attention Mechanism: Mathematical Details}
@@ -296,52 +437,14 @@ Without scaling, for large projection dimensions $d_k$, the dot product values g
 \end{columns}
 \end{frame}
 
-% Slide 11: Transformer Encoder Block: Pre-LN Architecture
-\begin{frame}{Pre-LN vs. Post-LN Block Layout}
-\begin{columns}[T,onlytextwidth]
-\column{0.55\textwidth}
-ViT adopts the \textbf{Pre-Layer Normalization} (Pre-LN) block structure (Xiong et al., 2020).
-\begin{itemize}
-    \item \textbf{Post-LN (Standard Transformer)}:
-    \newline {\small $\mathbf{x}'_l = \text{LN}(\mathbf{x}_{l-1} + \text{MHSA}(\mathbf{x}_{l-1}))$, \quad $\mathbf{x}_l = \text{LN}(\mathbf{x}'_l + \text{MLP}(\mathbf{x}'_l))$}
-    \item \textbf{Pre-LN (ViT Block)}:
-    \newline {\small $\mathbf{x}'_l = \mathbf{x}_{l-1} + \text{MHSA}(\text{LN}(\mathbf{x}_{l-1}))$, \quad $\mathbf{x}_l = \mathbf{x}'_l + \text{MLP}(\text{LN}(\mathbf{x}'_l))$}
-    \item \textbf{Advantage of Pre-LN}:
-    \begin{itemize}
-        \item Normalization on the residual branch prior to layer execution prevents vanishing/exploding gradients.
-        \item Removes the necessity of a learning rate warm-up stage.
-    \end{itemize}
-\end{itemize}
 
-\column{0.42\textwidth}
-\centering
-\begin{tikzpicture}[scale=0.85, font=\scriptsize]
-    % Pre-LN Flowchart
-    \draw[thick, LectureBlue, rounded corners] (0,0) rectangle (2.5,0.7) node[midway] {$\mathbf{x}_{l-1}$};
-    \draw[->, thick, LectureTeal] (1.25,0.7) -- (1.25,1.2);
-    \draw[thick, LectureBlue, fill=SoftGray] (0,1.2) rectangle (2.5,1.8) node[midway] {Layer Norm (LN)};
-    \draw[->, thick, LectureTeal] (1.25,1.8) -- (1.25,2.3);
-    \draw[thick, LectureBlue, fill=SoftGray] (0,2.3) rectangle (2.5,2.9) node[midway] {MHSA};
-    \draw[->, thick, LectureTeal] (1.25,2.9) -- (1.25,3.4);
-    
-    % Sum node
-    \draw[thick, fill=LectureGold!25] (1.25,3.6) circle (0.2) node {$+$};
-    \draw[->, thick, LectureTeal] (1.25,3.8) -- (1.25,4.3) node[above] {$\mathbf{x}'_l$};
-    
-    % Residual line
-    \draw[thick, LectureGold, ->] (-0.3, 0.35) -- (-0.3, 3.6) -- (1.05,3.6);
-    \draw[thick, LectureGold] (0, 0.35) -- (-0.3, 0.35);
-    \node[font=\tiny, left, LectureGold] at (-0.3, 2.0) {Residual};
-\end{tikzpicture}
-\end{columns}
-\end{frame}
 
 % Slide 12: Section Divider - Section 3
 \section{Inductive Biases and Training Dynamics}
 \begin{frame}
 \centering
 \vspace{0.25\textheight}
-{\Huge Section 3: Inductive Biases and Training Dynamics}
+{\Huge Section 2: Inductive Biases and Training Dynamics}
 \end{frame}
 
 % Slide 13: Inductive Biases: CNNs vs. ViTs
@@ -364,7 +467,7 @@ Data Requirement & Generalizes well on small datasets. & Requires massive datase
 % Slide 14: Data Efficiency & The Role of Pretraining
 \begin{frame}{Data Efficiency and The Role of Pretraining}
 \begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
+\column{0.45\textwidth}
 \begin{itemize}
     \item \textbf{Small Dataset Gap (CIFAR-10)}:
     \begin{itemize}
@@ -376,24 +479,37 @@ Data Requirement & Generalizes well on small datasets. & Requires massive datase
         \item CNNs have a strong translation equivariance and locality bias.
         \item ViT must learn spatial grid structures solely from sparse classification signals.
     \end{itemize}
-    \item \textbf{Scale Transition}:
-    \begin{itemize}
-        \item At massive scale (ImageNet, JFT-300M), ViT outperforms CNNs, showing higher capacity.
-    \end{itemize}
 \end{itemize}
 
-\column{0.44\textwidth}
+\column{0.52\textwidth}
 \centering
 \includegraphics[width=0.9\linewidth]{vit_cnn.png}
 \end{columns}
 \end{frame}
+
+\begin{frame}{CNNs vs ViTs}
+\centering
+\includegraphics[height=0.8\textheight,keepaspectratio]{vit_cnn2.png}
+
+\footnotesize
+Ref: https://medium.com/@hassaanidrees7/vision-transformer-vs-cnn-a-comparison-of-two-image-processing-giants-d6c85296f34f
+\end{frame}
+
 
 % Slide 15: Section Divider - Section 4
 \section{Advanced Visual Transformer Architectures}
 \begin{frame}
 \centering
 \vspace{0.25\textheight}
-{\Huge Section 4: Advanced Visual Transformer Architectures}
+{\Huge Section 3: Advanced Visual Transformer Architectures}
+\end{frame}
+
+\begin{frame}
+\centering
+\includegraphics[height=0.95\textheight,keepaspectratio]{receptive_field.png}
+
+\footnotesize
+Ref: Xia Z, Pan X, Song S, Li LE, Huang G. Vision transformer with deformable attention. InProceedings of the IEEE/CVF conference on computer vision and pattern recognition 2022 (pp. 4794-4803).
 \end{frame}
 
 % Slide 16: Swin Transformer: Shifted Windows
@@ -475,7 +591,7 @@ The Swin (Shifted Window) Transformer (Liu et al., 2021) addresses the $\mathcal
 \begin{frame}
 \centering
 \vspace{0.25\textheight}
-{\Huge Section 5: Downstream Vision Applications}
+{\Huge Section 4: Downstream Vision Applications}
 \end{frame}
 
 % Slide 20: Medical Image Segmentation (TransUNet \& Swin-Unet)
