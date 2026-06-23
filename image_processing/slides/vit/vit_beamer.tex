@@ -32,7 +32,7 @@
 \renewcommand{\arraystretch}{1.12}
 
 \title{Vision Transformers (ViT) and Attention-Based Visual Architectures}
-\subtitle{Data Science Graduate Course}
+\subtitle{Image processing Course}
 \author{}
 \date{June 2026}
 
@@ -401,42 +401,94 @@ Nguyen TQ, Salazar J. Transformers without tears: Improving the normalization of
 \begin{itemize}
     \item Projection of the input matrix $X \in \mathbb{R}^{(N+1)\times D}$ using query, key, and value weight matrices:
     \[
-    Q = X\mathbf{W}_Q, \quad K = X\mathbf{W}_K, \quad V = X\mathbf{W}_V, \quad \mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V \in \mathbb{R}^{D \times D_k}
+    Q = X\mathbf{W}_Q, \quad K = X\mathbf{W}_K, \quad V = X\mathbf{W}_V, \quad \mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V \in \mathbb{R}^{D \times d_q}
     \]
     \item Computing attention weights using Query-Key scaled dot-products:
     \[
-    A = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right), \quad A \in \mathbb{R}^{(N+1)\times (N+1)}
+    A = \text{softmax}\left(\frac{QK^T}{\sqrt{d_q}}\right), \quad A \in \mathbb{R}^{(N+1)\times (N+1)}
     \]
     \item The output is a weighted sum of representation values:
     \[
     \text{Attention}(Q, K, V) = A V
     \]
 \end{itemize}
-\begin{block}{Why Scale by $\sqrt{d_k}$?}
-Without scaling, for large projection dimensions $d_k$, the dot product values grow large in magnitude. This pushes the softmax function into regions with extremely small gradients (vanishing gradient problem). Dividing by $\sqrt{d_k}$ maintains stable variance.
+\begin{block}{Why Scale by $\sqrt{d_q}$?}
+Without scaling, for large projection dimensions $d_q$, the dot product values grow large in magnitude. This pushes the softmax function into regions with extremely small gradients (vanishing gradient problem). Dividing by $\sqrt{d_q}$ maintains stable variance.
 \end{block}
+\end{frame}
+
+\begin{frame}
+\centering
+\includegraphics[height=0.95\textheight,keepaspectratio]{vit_ex.png}
+\vfill
+\footnotesize
+Ref: https://sebastianraschka.com/blog/2023/self-attention-from-scratch.html
+\end{frame}
+
+\begin{frame}
+\centering
+\includegraphics[height=0.95\textheight,keepaspectratio]{self_attention.png}
+\vfill
+\footnotesize
+Ref: https://mchromiak.github.io/articles/2017/Sep/12/Transformer-Attention-is-all-you-need
 \end{frame}
 
 % Slide 10: Multi-Head Self-Attention (MHSA)
 \begin{frame}{Multi-Head Self-Attention (MHSA)}
-\begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
 \begin{itemize}
     \item Allows the model to attend to different representation subspaces at different positions.
     \[
     \text{MHSA}(Q, K, V) = [\mathbf{h}_1; \dots; \mathbf{h}_h]\mathbf{W}^O
     \]
-    where $\mathbf{h}_i = \text{Attention}(Q\mathbf{W}_i^Q, K\mathbf{W}_i^K, V\mathbf{W}_i^V)$
+    where $\mathbf{h}_i = \text{Attention}(X\mathbf{W}_i^Q, X\mathbf{W}_i^K, X\mathbf{W}_i^V)$
     \item $\mathbf{W}_i^Q, \mathbf{W}_i^K \in \mathbb{R}^{D \times D_k}$, $\mathbf{W}_i^V \in \mathbb{R}^{D \times D_v}$, and $\mathbf{W}^O \in \mathbb{R}^{hD_v \times D}$.
-    \item Multi-head scaling balances representation capacity and prevents query-key collapse.
+    \item Similar to CNN kernels detecting different patterns, multiple heads look for different token relationships in parallel.
 \end{itemize}
-
-\column{0.44\textwidth}
-\centering
-\includegraphics[width=\linewidth]{vit_ex.png}
-\end{columns}
 \end{frame}
 
+
+\begin{frame}
+\centering
+\includegraphics[height=0.95\textheight,keepaspectratio]{self_attention.png}
+\vfill
+\footnotesize
+Ref: https://mchromiak.github.io/articles/2017/Sep/12/Transformer-Attention-is-all-you-need
+\end{frame}
+
+% Slide 10a: Cross-Attention Mechanism
+\begin{frame}{Cross-Attention Mechanism}
+
+\begin{itemize}
+    \item \textbf{Two Different Inputs}:
+    \begin{itemize}
+        \item \textbf{Target Sequence} $Y \in \mathbb{R}^{M \times D_y}$ (e.g. decoder states)
+        \item \textbf{Source Sequence} $X \in \mathbb{R}^{N \times D_x}$ (e.g. encoder features)
+    \end{itemize}
+    \item \textbf{Linear Projections}:
+    \[
+    Q = Y\mathbf{W}_Q, \quad K = X\mathbf{W}_K, \quad V = X\mathbf{W}_V
+    \]
+    where $\mathbf{W}_Q \in \mathbb{R}^{D_y \times d_q}$, $\mathbf{W}_K \in \mathbb{R}^{D_x \times d_q}$, and $\mathbf{W}_V \in \mathbb{R}^{D_x \times d_v}$.
+    \item \textbf{Attention}:
+    \begin{itemize}
+        \item $A = \text{softmax}\left(\frac{QK^T}{\sqrt{d_q}}\right) \in \mathbb{R}^{M \times N}$
+        \item Computes a rectangular alignment map between target queries and source keys.
+    \end{itemize}
+    \item \textbf{Summary}:
+    \[
+    \text{Attention}(Q, K, V) = A V \in \mathbb{R}^{M \times d_v}
+    \]
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\centering
+\includegraphics[height=0.95\textheight,keepaspectratio]{cross_attention.png}
+\vfill
+\footnotesize
+Ref: https://learn.theaiedge.io/
+\end{frame}
 
 
 % Slide 12: Section Divider - Section 3
