@@ -63,7 +63,7 @@
 
     \item \textbf{Section 3: Advanced Visual Transformer Architectures}
 
-    \item \textbf{Section 4: Dense downstream Tasks \& Applications}
+    \item \textbf{Section 4: Downstream \& Multimodal Applications}
 
 \end{itemize}
 \end{frame}
@@ -686,18 +686,18 @@ Ref: Dai J, Qi H, Xiong Y, Li Y, Zhang G, Hu H, Wei Y. Deformable convolutional 
 Ref: Xia Z, Pan X, Song S, Li LE, Huang G. Vision transformer with deformable attention. InProceedings of the IEEE/CVF conference on computer vision and pattern recognition 2022 (pp. 4794-4803).
 \end{frame}
 
-% Slide 19: Section Divider - Section 5
-\section{Downstream Vision Applications}
+% Slide 19: Section Divider - Section 4
+\section{Downstream \& Multimodal Applications}
 \begin{frame}
 \centering
 \vspace{0.25\textheight}
-{\Huge Section 4: Downstream Vision Applications}
+{\Huge Section 4: Downstream \& Multimodal Applications}
 \end{frame}
 
 % Slide 20: Medical Image Segmentation (TransUNet \& Swin-Unet)
 \begin{frame}{Medical Image Segmentation: TransUNet and Swin-Unet}
 \begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
+\column{0.45\textwidth}
 Transformers excel in capturing global context, which is highly valuable in medical imaging (CT/MRI segmentation).
 \begin{itemize}
     \item \textbf{TransUNet} (Chen et al., 2021):
@@ -713,18 +713,18 @@ Transformers excel in capturing global context, which is highly valuable in medi
     \end{itemize}
 \end{itemize}
 
-\column{0.44\textwidth}
+\column{0.50\textwidth}
 \centering
-\includegraphics[height=0.34\textheight,keepaspectratio]{transunet.png}
+\includegraphics[height=0.45\textheight,keepaspectratio]{transunet.png}
 \vspace{0.3em}
-\includegraphics[height=0.34\textheight,keepaspectratio]{swinunet.png}
+\includegraphics[height=0.45\textheight,keepaspectratio]{swinunet.png}
 \end{columns}
 \end{frame}
 
 % Slide 21: Object Detection (DETR \& Deformable DETR)
 \begin{frame}{Object Detection: DETR and Deformable DETR}
 \begin{columns}[T,onlytextwidth]
-\column{0.52\textwidth}
+\column{0.48\textwidth}
 \begin{itemize}
     \item \textbf{DETR} (Carion et al., 2020):
     \begin{itemize}
@@ -739,7 +739,7 @@ Transformers excel in capturing global context, which is highly valuable in medi
     \end{itemize}
 \end{itemize}
 
-\column{0.44\textwidth}
+\column{0.51\textwidth}
 \centering
 \includegraphics[width=\linewidth]{ob_DETR.png}
 \vspace{0.4em}
@@ -747,27 +747,76 @@ Transformers excel in capturing global context, which is highly valuable in medi
 \end{columns}
 \end{frame}
 
-% Slide 22: Conclusion & Summary
-\begin{frame}{Conclusion and Summary}
+% Slide 22: Multimodal Alignment (OpenAI CLIP)
+\begin{frame}{Multimodal Alignment: OpenAI CLIP}
+
 \begin{itemize}
-    \item \textbf{Convolutions to Self-Attention}:
-    \begin{itemize}
-        \item Self-attention allows dynamic global context extraction, contrasting with CNN's local filter boundaries.
-    \end{itemize}
-    \item \textbf{Inductive Bias vs. Representation Capacity}:
-    \begin{itemize}
-        \item CNNs possess translation equivariance and locality, making them sample-efficient on small datasets.
-        \item ViTs have fewer spatial assumptions, providing superior capacity when trained on large-scale datasets.
-    \end{itemize}
-    \item \textbf{Hybrid \& Hierarchical Advancements}:
-    \begin{itemize}
-        \item Architectures like Swin Transformer and Deformable Attention (DAT) combine spatial hierarchies and linear attention constraints to excel in dense, high-resolution downstream tasks.
-    \end{itemize}
+    \item \textbf{Image Encoder}: ViT (or ResNet) extracts visual features.
+    \item \textbf{Text Encoder}: Transformer processes caption/text labels.
+    \item \textbf{Contrastive Objective}: Maximizes the cosine similarity between matched pairs $(I_i, T_i)$ in a batch, while minimizing similarity for all mismatched pairs.
+
 \end{itemize}
+
+
+\begin{center}
+\includegraphics[width=\linewidth]{clip.png}
+\end{center}
+
 \end{frame}
 
-% Slide 23: References
-\begin{frame}{Key References}
+% Slide 23: Large Vision-Language Models (LLaVA)
+\begin{frame}{Large Vision-Language Models: LLaVA}
+
+\begin{itemize}
+
+    \item \textbf{Visual Encoder}: CLIP ViT-L/14 extracts visual tokens from raw images.
+    \item \textbf{Projection Matrix (MLP)}: Maps visual tokens to the LLM's word embedding space.
+    \item \textbf{Language Decoder}: LLaMA/Vicuna processes vision tokens + text instruction tokens.
+
+    \item \textbf{Training Protocol}:
+    \begin{itemize}
+        \item \textbf{Stage 1}: Feature alignment pre-training (updates only projection weights).
+        \item \textbf{Stage 2}: Fine-tuning visual encoder and LLM on visual instruction data.
+    \end{itemize}
+\end{itemize}
+
+\begin{center}
+\includegraphics[width=\linewidth]{llava.png}
+\end{center}
+
+\end{frame}
+
+% Slide 24: Audio Transformers (OpenAI Whisper)
+\begin{frame}{Audio Transformers: OpenAI Whisper}
+
+While primarily a speech model, \textbf{Whisper} shows the versatility of Transformers on 2D spectrogram inputs.
+\begin{itemize}
+    \item \textbf{Time-Frequency Representation}:
+    \begin{itemize}
+        \item Audio waveforms are converted to 2D 80-channel log-magnitude Mel-spectrograms (treated like images).
+    \end{itemize}
+    \item \textbf{Encoder-Decoder Architecture}:
+    \begin{itemize}
+        \item \textbf{Audio Encoder}: 1D/2D convolution stem maps spectrogram chunks to embeddings, followed by a Transformer encoder.
+        \item \textbf{Text Decoder}: Standard autoregressive Transformer decoder generates transcriptions.
+    \end{itemize}
+    \item \textbf{Cross-Attention Bridge}:
+    \begin{itemize}
+        \item The decoder query tokens attend to the audio encoder representations via cross-attention.
+    \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+        \includegraphics[height=1.05\textheight]{whisper.png}
+    \end{center}
+
+\end{frame}
+
+% Slide 26: References
+\begin{frame}[allowframebreaks]{Key References}
 \footnotesize
 \begin{itemize}
     \item \textbf{Vision Transformer (ViT)}: \\
@@ -782,6 +831,12 @@ Transformers excel in capturing global context, which is highly valuable in medi
     Carion, N., et al. ``End-to-end object detection with transformers.'' \textit{ECCV}, 2020.
     \item \textbf{TransUNet}: \\
     Chen, J., et al. ``Transunet: Transformers make strong encoders for medical image segmentation.'' \textit{arXiv:2102.04306}, 2021.
+    \item \textbf{CLIP (Multimodal Alignment)}: \\
+    Radford, A., et al. ``Learning transferable visual models from natural language supervision.'' \textit{ICML}, 2021.
+    \item \textbf{LLaVA (Visual Instruction Tuning)}: \\
+    Liu, H., et al. ``Visual instruction tuning.'' \textit{NeurIPS}, 2023.
+    \item \textbf{Whisper (Speech Recognition)}: \\
+    Radford, A., et al. ``Robust speech recognition via large-scale weak supervision.'' \textit{ICML}, 2023.
 \end{itemize}
 \end{frame}
 
