@@ -1,6 +1,7 @@
 *.pklz
 image_processing/sub1/
 image_processing/output/
+conversations/
 
 # latex
 *.aux
